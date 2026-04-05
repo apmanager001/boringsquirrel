@@ -1,8 +1,8 @@
 import { createAuthClient } from "better-auth/react";
-import { usernameClient } from "better-auth/client/plugins";
+import { adminClient, usernameClient } from "better-auth/client/plugins";
 
 export const authClient = createAuthClient({
-  plugins: [usernameClient()],
+  plugins: [adminClient(), usernameClient()],
 });
 
 export type AuthSession = typeof authClient.$Infer.Session;

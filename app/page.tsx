@@ -142,6 +142,7 @@ export default async function Home() {
                 sizes="(max-width: 1024px) 100vw, 30rem"
                 className="object-cover"
                 priority
+                loading="eager"
               />
             </div>
             <div className="absolute inset-x-0 bottom-0 rounded-b-4xl bg-linear-to-t from-black/65 via-black/10 to-transparent p-6 text-white">

@@ -18,6 +18,7 @@ export function SiteHeader() {
               sizes="48px"
               className="object-cover"
               priority
+              loading="eager"
             />
           </span>
           <span className="min-w-0">

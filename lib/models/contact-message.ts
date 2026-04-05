@@ -23,11 +23,26 @@ const contactMessageSchema = new Schema(
       required: true,
       trim: true,
     },
+    isRead: {
+      type: Boolean,
+      default: false,
+    },
+    readAt: {
+      type: Date,
+      default: null,
+    },
+    readByUserId: {
+      type: String,
+      default: null,
+      trim: true,
+    },
   },
   {
     timestamps: true,
   },
 );
+
+contactMessageSchema.index({ isRead: 1, createdAt: -1 });
 
 export const ContactMessageModel =
   models.ContactMessage || model("ContactMessage", contactMessageSchema);

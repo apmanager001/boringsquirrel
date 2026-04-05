@@ -386,7 +386,7 @@ export function OilcapGame() {
       : `Connect the source on row ${START_ROW + 1} to the cap on row ${run.targetRow + 1}. Reachable pipes score well; isolated or leaking pipes drag the total down.`;
 
   return (
-    <div className="card-surface min-w-0 rounded-4xl p-4 sm:p-6">
+    <div className="card-surface rounded-4xl p-4 sm:p-6">
       <div className="flex flex-col gap-6 xl:flex-row">
         <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -417,7 +417,7 @@ export function OilcapGame() {
             </div>
           </div>
 
-          <div className="mt-5 max-w-full overflow-x-auto pb-2">
+          <div className="mt-5 overflow-x-auto pb-2">
             <div className="min-w-176 space-y-2">
               {Array.from({ length: ROWS }, (_, row) => (
                 <div

@@ -6,6 +6,7 @@ import type {
 import Link from "next/link";
 import type { MDXComponents } from "mdx/types";
 import { Callout } from "@/components/mdx/callout";
+import { HoverTips } from "@/components/mdx/hoverTips";
 
 function MdxLink({
   href = "",
@@ -50,6 +51,7 @@ const components: MDXComponents = {
   img: MdxImage,
   blockquote: MdxBlockquote,
   Callout,
+  HoverTips,
 };
 
 export function useMDXComponents(): MDXComponents {

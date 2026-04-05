@@ -46,7 +46,9 @@ export default async function SettingsPage() {
   if (!identity) {
     redirect("/login");
   }
-
+  if (!identity.isAdmin) {
+      redirect("/settings");
+  }
   const [likedPostCount, socialLinks] = await Promise.all([
     getUserLikedPostCount(identity.userId),
     getUserProfileSocialLinks(identity.userId),
@@ -60,7 +62,11 @@ export default async function SettingsPage() {
       <section className="space-y-6">
         <div className="flex items-center justify-between">
           <p className="section-kicker">Settings</p>
-          <SignOutButton />
+          <div>
+            <Link href='/admin' className='btn btn-secondary mr-4'>Admin</Link>
+            <SignOutButton />
+          </div>
+          
         </div>
         <h1 className="display-font text-5xl font-bold leading-[0.96] text-base-content sm:text-6xl">
           Account preferences

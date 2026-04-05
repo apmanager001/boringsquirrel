@@ -101,7 +101,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               {post.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="badge badge-accent badge-sm font-medium text-primary-content"
+                  className="badge badge-primary badge-sm font-medium text-primary-content"
                 >
                   {tag}
                 </span>

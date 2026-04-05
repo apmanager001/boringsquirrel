@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { nextCookies } from "better-auth/next-js";
-import { username } from "better-auth/plugins";
+import { admin, username } from "better-auth/plugins";
 import { renderVerifyEmail } from "@/emails/verify-email";
 import {
   connectMongoClient,
@@ -25,6 +25,7 @@ type SessionUserLike = {
   email: string;
   name?: string | null;
   emailVerified?: boolean | null;
+  role?: string | null;
   username?: string | null;
   displayUsername?: string | null;
 };
@@ -33,9 +34,21 @@ export type SessionIdentity = {
   userId: string;
   email: string;
   emailVerified: boolean;
+  role: string;
+  isAdmin: boolean;
   username: string;
   displayName: string;
 };
+
+export function normalizeUserRole(role: string | null | undefined) {
+  return typeof role === "string" && role.trim().length > 0 ? role : "user";
+}
+
+export function hasAdminRole(role: string | null | undefined) {
+  return normalizeUserRole(role)
+    .split(",")
+    .some((value) => value.trim().toLowerCase() === "admin");
+}
 
 export const auth =
   hasBetterAuthConfig() && authDb
@@ -80,6 +93,10 @@ export const auth =
         },
         plugins: [
           nextCookies(),
+          admin({
+            defaultRole: "user",
+            adminRoles: ["admin"],
+          }),
           username({
             minUsernameLength: 3,
             maxUsernameLength: 24,
@@ -109,6 +126,7 @@ export async function ensureAuthReady() {
 
 export function getSessionIdentity(user: SessionUserLike): SessionIdentity {
   const fallbackUsername = user.email.split("@")[0] || "player";
+  const role = normalizeUserRole(user.role);
   const username =
     typeof user.username === "string" && user.username.length > 0
       ? user.username
@@ -122,6 +140,8 @@ export function getSessionIdentity(user: SessionUserLike): SessionIdentity {
     userId: user.id,
     email: user.email,
     emailVerified: user.emailVerified === true,
+    role,
+    isAdmin: hasAdminRole(role),
     username,
     displayName,
   };

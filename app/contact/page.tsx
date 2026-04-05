@@ -13,18 +13,18 @@ export const metadata = buildMetadata({
 export default function ContactPage() {
   return (
     <main className="page-shell py-14 sm:py-20">
-      <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
+      <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] items-center">
         <div className="space-y-6">
           <p className="section-kicker">Contact</p>
           <div className="space-y-4">
             <h1 className="display-font text-5xl font-bold leading-[0.96] text-base-content sm:text-6xl">
-              Reach out without hunting for the right inbox.
+              Reach out for any inquiries, feedback, or just to say hi!
             </h1>
-            <p className="max-w-3xl text-lg leading-8 text-base-content/80">
+            {/* <p className="max-w-3xl text-lg leading-8 text-base-content/80">
               Send ideas, bug reports, collaboration notes, or requests for
               future posts and games. The form is already wired for Mongo
               storage and Zoho delivery.
-            </p>
+            </p> */}
           </div>
         </div>
 
@@ -39,13 +39,14 @@ export default function ContactPage() {
             </div>
           </div>
 
-          <div className="card-surface rounded-[1.6rem] p-5 text-sm leading-7 text-base-content/78">
+          {/* <div className="card-surface rounded-[1.6rem] p-5 text-sm leading-7 text-base-content/78">
             <p className="section-kicker before:w-6">What happens</p>
             <p className="mt-4">
-              Contact submissions will be stored for admin review and emailed to
-              your contact inbox as soon as the `.env` values are present.
+              Contact submissions are stored for admin review in the site inbox,
+              and they are also emailed to your contact inbox whenever SMTP is
+              active.
             </p>
-          </div>
+          </div> */}
         </aside>
       </section>
 

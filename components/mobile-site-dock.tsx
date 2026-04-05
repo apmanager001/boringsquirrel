@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { getSessionIdentityFromUnknown } from "@/lib/auth";
 import {
   CircleUserRound,
   ExternalLink,
@@ -12,6 +13,7 @@ import {
   Mail,
   Menu,
   NotebookText,
+  ShieldUser,
   Trophy,
   UserRoundPlus,
   X,
@@ -179,6 +181,8 @@ function MobileSiteDockFrame({
       router.refresh();
     });
   }
+  const identity = session?.user;
+  console.log(identity)
 
   return (
     <>
@@ -242,6 +246,23 @@ function MobileSiteDockFrame({
                     </Link>
                   );
                 })}
+                {identity?.role === "admin" && (
+                  <Link
+                    key='admin'
+                    href='/admin'
+                    onClick={() => setDrawerOpen(false)}
+                    className={`flex items-center justify-between rounded-[1.35rem] border px-4 py-3 text-sm font-medium transition border-white/10 bg-white/4 text-neutral-content/82 hover:border-white/16 hover:bg-white/10 hover:text-neutral-content"
+                    }`}
+                  >
+                    <span className="inline-flex items-center gap-3">
+                      <ShieldUser className="size-4" />
+                      Admin
+                    </span>
+                    <span className="text-neutral-content/45">
+                      <ExternalLink className="size-4" />
+                    </span>
+                  </Link>
+                  )}
               </div>
 
               <div className="mt-6 rounded-[1.7rem] border border-white/10 bg-white/5 p-4">

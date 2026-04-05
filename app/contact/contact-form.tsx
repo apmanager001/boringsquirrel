@@ -26,6 +26,7 @@ export function ContactForm() {
             type="text"
             className="input w-full rounded-2xl border border-base-300/20 bg-white/60"
             placeholder="Your name"
+            required
           />
           {state.errors?.name ? (
             <span className="text-sm text-error">{state.errors.name}</span>
@@ -41,6 +42,7 @@ export function ContactForm() {
             type="email"
             className="input w-full rounded-2xl border border-base-300/20 bg-white/60"
             placeholder="you@example.com"
+            required
           />
           {state.errors?.email ? (
             <span className="text-sm text-error">{state.errors.email}</span>
@@ -50,13 +52,14 @@ export function ContactForm() {
 
       <label className="mt-5 grid gap-2">
         <span className="text-sm font-semibold text-base-content/75">
-          Subject
+          Title
         </span>
         <input
           name="subject"
           type="text"
           className="input w-full rounded-2xl border border-base-300/20 bg-white/60"
           placeholder="What do you want to talk about?"
+          required
         />
         {state.errors?.subject ? (
           <span className="text-sm text-error">{state.errors.subject}</span>
@@ -72,6 +75,8 @@ export function ContactForm() {
           rows={7}
           className="textarea w-full rounded-[1.4rem] border border-base-300/20 bg-white/60"
           placeholder="Tell me what you need, what you are building, or what you want to see next on the site."
+          required
+          minLength={20}
         />
         {state.errors?.message ? (
           <span className="text-sm text-error">{state.errors.message}</span>
@@ -90,11 +95,7 @@ export function ContactForm() {
         </div>
       ) : null}
 
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-        <p className="text-sm leading-7 text-base-content/70">
-          Messages are stored in MongoDB when configured and emailed through
-          Zoho when SMTP is active.
-        </p>
+      <div className="mt-6 flex flex-wrap items-center justify-end gap-4">
         <button
           type="submit"
           disabled={pending}
