@@ -1,0 +1,46 @@
+---
+title: "Designing Oilcap for the Web Means Respecting the Old DOS Tension"
+description: "Oilcap works because efficient placement matters. The web version should keep that pressure instead of diluting it."
+date: "2026-03-26"
+updated: "2026-03-30"
+tags:
+  - oilcap
+  - game-design
+  - retro
+category: "Gaming"
+heroImage: "/games/oilcap.png"
+draft: true
+readingTime: 4
+---
+
+# The score rule is the real personality
+
+Oilcap is not interesting because pipes exist on a grid. It is interesting because every placement has a cost and every unnecessary piece drags the score backward.
+
+That means the browser version should avoid turning into a loose sandbox. It should keep the part that makes the old design feel tense:
+
+- route fast
+- waste little
+- stay readable under pressure
+
+## What should survive the transition
+
+The SVG pipe set in `/public/pipe` is already enough to establish the language of the game. The next step is not more decoration. It is interaction quality:
+
+- drag and drop that feels precise
+- a board that reads clearly at a glance
+- score feedback that teaches efficiency instead of guessing
+
+<Callout title="North star">
+If the player can win while playing messily, the remake has probably lost the thing that made the original memorable.
+</Callout>
+
+## Why the landing page matters now
+
+Even before the full interaction ships, the Oilcap page can explain:
+
+- how pieces affect score
+- why the game is different from a generic pipe puzzle
+- what kind of leaderboard it will reward later
+
+That context helps players understand the promise before a single move is made.

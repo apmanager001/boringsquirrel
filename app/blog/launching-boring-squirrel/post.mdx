@@ -1,0 +1,57 @@
+---
+title: "Launching Boring Squirrel Without Sanding Off the Weird"
+description: "Why this site starts with strong information architecture, real metadata, and a deliberately playful visual identity."
+date: "2026-04-01"
+updated: "2026-04-01"
+tags:
+  - launch
+  - seo
+  - nextjs
+category: "Build Notes"
+heroImage: "/squirrelglasses.webp"
+draft: true
+readingTime: 4
+source:
+  - https://boringsquirrel.com
+  - https://boringsquirrel.com
+  - https://boringsquirrel.com
+---
+
+# A playful site still needs a hard spine
+
+The easiest way to build a site like this is to ship the visuals first and promise the structure later. That usually ends with a homepage that looks fine in screenshots and falls apart everywhere else.
+
+Boring Squirrel is starting the other way around:
+
+- clear route structure
+- sitemap and robots from the start
+- frontmatter-driven blog organization
+- game landing pages that can rank before the full game loops ship
+
+<Callout title="The rule">
+  If a page matters enough to exist, it matters enough to have a real title,
+  description, canonical URL, and a reason to be indexed.
+</Callout>
+
+## Why mix games and a blog?
+
+Because the games alone are too sparse at the beginning, and a blog alone would undersell the personality of the project.
+
+The blog does three jobs at once:
+
+- it explains the games as they evolve
+- it gives the site more search entry points
+- it creates a reason for players to come back between releases
+
+## The first-phase constraint
+
+The current goal is not to finish every feature. The goal is to make the foundation sturdy enough that adding auth, leaderboards, and richer admin tooling does not mean reshaping the whole app later.
+
+That is why the project already has:
+
+- MDX content folders under `app/blog`
+- Mongo and Zoho plumbing
+- account, admin, and settings routes reserved in the structure
+- metadata helpers instead of scattered page-by-page SEO code
+
+The visuals can keep getting sharper, but the routing and content model should stop wobbling now.
