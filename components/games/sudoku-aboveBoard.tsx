@@ -64,11 +64,11 @@ function SudokuAboveBoard({
             <p className="section-kicker before:w-4">Difficulty</p>
             <Sparkles className="size-4 shrink-0 text-accent" />
           </div>
-          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2">
             <h3 className="display-font text-lg font-semibold sm:text-xl">
               {difficultyDetails.label}
             </h3>
-            <div className="flex gap-2 w-full ">
+            <div className="flex w-full flex-wrap gap-2">
               <span className="text-center rounded-full bg-base-100/75 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-base-content/65">
                 Base {difficultyDetails.baseScore}
               </span>

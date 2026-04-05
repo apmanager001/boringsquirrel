@@ -322,8 +322,8 @@ export function AcornSweeperGame() {
             />
 
             <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_12rem]">
-              <div className="rounded-[1.75rem] border border-base-300/15 bg-base-100/55 p-3 sm:p-4">
-                <div className="mx-auto w-full max-w-176 overflow-hidden rounded-[1.2rem] border border-base-300/20 bg-white/55">
+              <div className="rounded-[1.75rem] sm:border border-base-300/15 bg-base-100/55 sm:p-4">
+                <div className="mx-auto w-full max-w-176 overflow-hidden  border border-base-300/20 bg-white/55">
                   <div
                     className="grid"
                     style={{
@@ -439,7 +439,7 @@ export function AcornSweeperGame() {
                   </button>
 
                   <div
-                    className="tooltip tooltip-top md:tooltip-left mt-2 flex items-center justify-center"
+                    className="btn h-12 rounded-2xl border border-base-300/20 bg-base-100/75 hover:bg-base-100 tooltip tooltip-top md:tooltip-left"
                     data-tip="Right-click any hidden square to place or remove a squirrel. On touch screens, switch to Flag mode before tapping."
                   >
                     <Info className="text-info" />

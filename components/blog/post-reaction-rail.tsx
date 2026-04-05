@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Heart, LoaderCircle, ShieldCheck } from "lucide-react";
+import { Heart, LoaderCircle } from "lucide-react";
 
 type PostReactionRailProps = {
   slug: string;

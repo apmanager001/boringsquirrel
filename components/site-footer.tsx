@@ -65,7 +65,7 @@ export function SiteFooter() {
           <p className="mb-4 text-sm font-semibold uppercase tracking-[0.22em] text-neutral-content/65">
             Social
           </p>
-          {socialLinks.length > 0 ? (
+          {socialLinks.length > 0 && (
             <div className="grid gap-3 text-sm">
               {socialLinks.map((item) => (
                 <a
@@ -84,18 +84,13 @@ export function SiteFooter() {
                 </a>
               ))}
             </div>
-          ) : (
-            <div className="space-y-3 text-sm text-neutral-content/75">
-              <p>
-                Add your public social URLs to the optional `SOCIAL_*` env
-                values when you are ready.
-              </p>
+          )}
+          <div className="space-y-3 mt-4 text-sm text-neutral-content/75">
               <p className="inline-flex items-center gap-2 rounded-full border border-white/12 px-3 py-2">
                 <Rss className="size-4" />
-                RSS can be added after the blog feed ships.
+                All Blog Posts
               </p>
             </div>
-          )}
         </div>
       </div>
 

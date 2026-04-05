@@ -7,13 +7,7 @@ import {
   useState,
   useTransition,
 } from "react";
-import {
-  Eraser,
-  NotebookPen,
-  RefreshCcw,
-  Trophy,
-  Info,
-} from "lucide-react";
+import { Eraser, NotebookPen, RefreshCcw, Trophy, Info } from "lucide-react";
 import {
   calculateSudokuScore,
   cloneSudokuGrid,
@@ -489,98 +483,100 @@ export function SudokuGame() {
                 </p>
               </div> */}
               <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_12rem]">
-                <div className="rounded-[1.75rem] md:border border-base-300/15 bg-base-100/55 sm:p-4">
-                  <div className="grid grid-cols-9 overflow-hidden md:border border-base-300/20 bg-white/55">
-                    {Array.from({ length: 9 }, (_, row) =>
-                      Array.from({ length: 9 }, (_, col) => {
-                        const cellValue = game.board[row]?.[col] ?? 0;
-                        const cellNotes = game.notes[row]?.[col] ?? [];
-                        const selected =
-                          game.selectedCell?.row === row &&
-                          game.selectedCell?.col === col;
-                        const related =
-                          game.selectedCell &&
-                          (game.selectedCell.row === row ||
-                            game.selectedCell.col === col ||
-                            (Math.floor(game.selectedCell.row / 3) ===
-                              Math.floor(row / 3) &&
-                              Math.floor(game.selectedCell.col / 3) ===
-                                Math.floor(col / 3)));
-                        const matchingValue =
-                          selectedValue !== 0 && cellValue === selectedValue;
-                        const errorCell =
-                          game.errorCell?.row === row &&
-                          game.errorCell?.col === col;
-                        const borderClasses = [
-                          row === 0
-                            ? "border-t-2 border-t-base-300/55"
-                            : "border-t border-t-base-300/16",
-                          col === 0
-                            ? "border-l-2 border-l-base-300/55"
-                            : "border-l border-l-base-300/16",
-                          (row + 1) % 3 === 0
-                            ? "border-b-2 border-b-base-300/55"
-                            : "border-b border-b-base-300/16",
-                          (col + 1) % 3 === 0
-                            ? "border-r-2 border-r-base-300/55"
-                            : "border-r border-r-base-300/16",
-                        ].join(" ");
+                <div className="rounded-[1.75rem] sm:border border-base-300/15 bg-base-100/55 sm:p-4">
+                  <div className="mx-auto w-full max-w-176 overflow-hidden border border-base-300/20 bg-white/55">
+                    <div className="grid grid-cols-9">
+                      {Array.from({ length: 9 }, (_, row) =>
+                        Array.from({ length: 9 }, (_, col) => {
+                          const cellValue = game.board[row]?.[col] ?? 0;
+                          const cellNotes = game.notes[row]?.[col] ?? [];
+                          const selected =
+                            game.selectedCell?.row === row &&
+                            game.selectedCell?.col === col;
+                          const related =
+                            game.selectedCell &&
+                            (game.selectedCell.row === row ||
+                              game.selectedCell.col === col ||
+                              (Math.floor(game.selectedCell.row / 3) ===
+                                Math.floor(row / 3) &&
+                                Math.floor(game.selectedCell.col / 3) ===
+                                  Math.floor(col / 3)));
+                          const matchingValue =
+                            selectedValue !== 0 && cellValue === selectedValue;
+                          const errorCell =
+                            game.errorCell?.row === row &&
+                            game.errorCell?.col === col;
+                          const borderClasses = [
+                            row === 0
+                              ? "border-t-2 border-t-base-300/55"
+                              : "border-t border-t-base-300/16",
+                            col === 0
+                              ? "border-l-2 border-l-base-300/55"
+                              : "border-l border-l-base-300/16",
+                            (row + 1) % 3 === 0
+                              ? "border-b-2 border-b-base-300/55"
+                              : "border-b border-b-base-300/16",
+                            (col + 1) % 3 === 0
+                              ? "border-r-2 border-r-base-300/55"
+                              : "border-r border-r-base-300/16",
+                          ].join(" ");
 
-                        return (
-                          <button
-                            key={`${row}-${col}`}
-                            type="button"
-                            onClick={() => selectCell(row, col)}
-                            className={`relative aspect-square min-w-0 p-1 transition sm:p-2 ${borderClasses} ${
-                              selected
-                                ? "bg-primary/18"
-                                : errorCell
-                                  ? "bg-error/18"
-                                  : matchingValue
-                                    ? "bg-secondary/16"
-                                    : related
-                                      ? "bg-white/65"
-                                      : "bg-white/40"
-                            } ${errorCell ? "ring-2 ring-error/45 ring-inset" : ""}`}
-                            aria-label={`Row ${row + 1}, column ${col + 1}`}
-                          >
-                            {cellValue !== 0 ? (
-                              <span
-                                className={`flex h-full items-center justify-center text-xl font-semibold sm:text-2xl ${
-                                  game.givens[row]?.[col]
-                                    ? "text-base-content"
-                                    : "text-primary"
-                                }`}
-                              >
-                                {cellValue}
-                              </span>
-                            ) : (
-                              <span className="grid h-full grid-cols-3 grid-rows-3 text-[0.52rem] font-medium text-base-content/52 sm:text-[0.62rem]">
-                                {Array.from({ length: 9 }, (_, noteIndex) => {
-                                  const noteValue = noteIndex + 1;
+                          return (
+                            <button
+                              key={`${row}-${col}`}
+                              type="button"
+                              onClick={() => selectCell(row, col)}
+                              className={`relative aspect-square min-w-0 p-1 transition sm:p-2 ${borderClasses} ${
+                                selected
+                                  ? "bg-primary/18"
+                                  : errorCell
+                                    ? "bg-error/18"
+                                    : matchingValue
+                                      ? "bg-secondary/16"
+                                      : related
+                                        ? "bg-white/65"
+                                        : "bg-white/40"
+                              } ${errorCell ? "ring-2 ring-error/45 ring-inset" : ""}`}
+                              aria-label={`Row ${row + 1}, column ${col + 1}`}
+                            >
+                              {cellValue !== 0 ? (
+                                <span
+                                  className={`flex h-full items-center justify-center text-xl font-semibold sm:text-2xl ${
+                                    game.givens[row]?.[col]
+                                      ? "text-base-content"
+                                      : "text-primary"
+                                  }`}
+                                >
+                                  {cellValue}
+                                </span>
+                              ) : (
+                                <span className="grid h-full grid-cols-3 grid-rows-3 text-[0.52rem] font-medium text-base-content/52 sm:text-[0.62rem]">
+                                  {Array.from({ length: 9 }, (_, noteIndex) => {
+                                    const noteValue = noteIndex + 1;
 
-                                  return (
-                                    <span
-                                      key={noteValue}
-                                      className="flex items-center justify-center"
-                                    >
-                                      {cellNotes.includes(noteValue)
-                                        ? noteValue
-                                        : ""}
-                                    </span>
-                                  );
-                                })}
-                              </span>
-                            )}
-                          </button>
-                        );
-                      }),
-                    )}
+                                    return (
+                                      <span
+                                        key={noteValue}
+                                        className="flex items-center justify-center"
+                                      >
+                                        {cellNotes.includes(noteValue)
+                                          ? noteValue
+                                          : ""}
+                                      </span>
+                                    );
+                                  })}
+                                </span>
+                              )}
+                            </button>
+                          );
+                        }),
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 <div className="rounded-3xl border border-base-300/15 bg-white/38 p-4">
-                  <div className="grid grid-cols-5 md:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-4 gap-2 sm:grid-cols-5 md:grid-cols-2">
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((value) => {
                       const complete = (digitCounts.get(value) ?? 0) === 9;
 
@@ -600,7 +596,7 @@ export function SudokuGame() {
                       );
                     })}
                     <div
-                      className="btn h-12 rounded-2xl border border-base-300/20 bg-base-100/75 hover:bg-base-100 sm:col-span-1 tooltip tooltip-top md:tooltip-left"
+                      className="btn h-12 rounded-2xl border border-base-300/20 bg-base-100/75 hover:bg-base-100 tooltip tooltip-top md:tooltip-left"
                       data-tip={`N toggles pencil mode. Arrow keys move the cursor.
                     Backspace or Delete clears the selected cell.`}
                     >
@@ -609,7 +605,7 @@ export function SudokuGame() {
                     <button
                       type="button"
                       onClick={clearSelectedCell}
-                      className="btn col-span-2 h-12 rounded-2xl border border-base-300/20 bg-base-100/75 hover:bg-base-100 sm:col-span-1"
+                      className="btn h-12 rounded-2xl border border-base-300/20 bg-base-100/75 hover:bg-base-100"
                     >
                       <Eraser className="size-4" />
                     </button>
@@ -621,7 +617,7 @@ export function SudokuGame() {
                           noteMode: !current.noteMode,
                         }))
                       }
-                      className={`btn col-span-3 h-12 rounded-2xl sm:col-span-1 ${
+                      className={`btn h-12 rounded-2xl ${
                         game.noteMode
                           ? "btn-primary"
                           : "border border-base-300/20 bg-base-100/75 hover:bg-base-100"
