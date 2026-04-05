@@ -4,8 +4,11 @@ import Link from "next/link";
 import { getAuthSession, getSessionIdentityFromUnknown } from "@/lib/auth";
 import { hasBetterAuthConfig } from "@/lib/env";
 import { getUserLikedPostCount } from "@/lib/blog-likes";
+import { getUserProfileSocialLinks } from "@/lib/profiles";
 import { buildMetadata } from "@/lib/site";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { ProfileSocialLinksForm } from "@/components/settings/profile-social-links-form";
+import { ProfileUsernameForm } from "@/components/settings/profile-username-form";
 import Image from "next/image";
 
 export const metadata = buildMetadata({
@@ -44,18 +47,13 @@ export default async function SettingsPage() {
     redirect("/login");
   }
 
-  const [ likedPostCount] = await Promise.all([
+  const [likedPostCount, socialLinks] = await Promise.all([
     getUserLikedPostCount(identity.userId),
+    getUserProfileSocialLinks(identity.userId),
   ]);
 
-  const username =
-    "username" in session.user && typeof session.user.username === "string"
-      ? session.user.username
-      : session.user.email.split("@")[0];
-  const displayName =
-    "name" in session.user && typeof session.user.name === "string"
-      ? session.user.name
-      : username;
+  const username = identity.username;
+  const displayName = identity.displayName;
 
   return (
     <main className="page-shell py-14 sm:py-20">
@@ -86,12 +84,7 @@ export default async function SettingsPage() {
               className="rounded-full border border-base-300/20 bg-white/50 object-cover"
             />
           </div>
-          <p className="mt-3 text-sm leading-7 text-base-content/80">
-            Current username: {username}.
-          </p>
-          <p className="mt-3 text-sm leading-7 text-base-content/80">
-            Current display name: {displayName}.
-          </p>
+          <ProfileUsernameForm username={username} displayName={displayName} />
           <Link
             href={`/profile/${identity.userId}`}
             className="inline-flex items-center gap-2 mt-4 text-sm font-medium text-primary hover:text-primary/80"
@@ -124,6 +117,13 @@ export default async function SettingsPage() {
             be added directly on top.
           </p>
         </div>
+        <ProfileSocialLinksForm
+          steamHandle={socialLinks.steamHandle}
+          discordHandle={socialLinks.discordHandle}
+          xboxHandle={socialLinks.xboxHandle}
+          playstationHandle={socialLinks.playstationHandle}
+          twitchHandle={socialLinks.twitchHandle}
+        />
         <div className="card-surface rounded-[1.8rem] p-6">
           <div className="flex items-center gap-3">
             <Heart className="size-5 text-accent" />

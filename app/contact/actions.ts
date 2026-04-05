@@ -10,11 +10,6 @@ export type ContactFormState = {
   errors?: Partial<Record<ContactField, string>>;
 };
 
-export const initialContactFormState: ContactFormState = {
-  status: "idle",
-  message: "",
-};
-
 function getValue(formData: FormData, key: ContactField) {
   return String(formData.get(key) ?? "").trim();
 }

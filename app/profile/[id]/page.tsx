@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { BadgeCheck, Trophy, UserRound } from "lucide-react";
+import { ProfileSocialHandles } from "@/components/profile/profile-social-handles";
 import { formatGameScoreDetails } from "@/lib/games/score-formatting";
 import { getPublicProfileById } from "@/lib/profiles";
 import { buildMetadata, formatDate, getGameBySlug } from "@/lib/site";
@@ -52,6 +53,33 @@ export default async function PublicProfilePage({
   );
   const hasDistinctDisplayName =
     profile.displayName.toLowerCase() !== profile.username.toLowerCase();
+  const sharedAccounts = [
+    {
+      label: "Steam",
+      handle: profile.socialLinks.steamHandle,
+      icon: "/socialIcons/steam.svg",
+    },
+    {
+      label: "Discord",
+      handle: profile.socialLinks.discordHandle,
+      icon: "/socialIcons/discord.svg",
+    },
+    {
+      label: "Xbox",
+      handle: profile.socialLinks.xboxHandle,
+      icon: "/socialIcons/xbox.svg",
+    },
+    {
+      label: "PlayStation",
+      handle: profile.socialLinks.playstationHandle,
+      icon: "/socialIcons/playstation.svg",
+    },
+    {
+      label: "Twitch",
+      handle: profile.socialLinks.twitchHandle,
+      icon: "/socialIcons/twitch.svg",
+    },
+  ].filter((account) => account.handle.length > 0);
 
   return (
     <main className="page-shell py-14 sm:py-20">
@@ -84,7 +112,7 @@ export default async function PublicProfilePage({
             <div>
               <p className="section-kicker before:w-6">Saved scores</p>
               <h2 className="display-font mt-3 text-3xl font-semibold">
-                Best runs on file
+                Best scores
               </h2>
             </div>
             <Trophy className="size-6 text-secondary" />
@@ -138,7 +166,7 @@ export default async function PublicProfilePage({
               <div className="flex items-center justify-between gap-4">
                 <span>Username</span>
                 <span className="font-semibold text-base-content">
-                  @{profile.username}
+                  {profile.username}
                 </span>
               </div>
               {hasDistinctDisplayName ? (
@@ -163,6 +191,16 @@ export default async function PublicProfilePage({
               </div>
             </div>
           </div>
+
+          {sharedAccounts.length > 0 ? (
+            <div className="card-surface rounded-[1.8rem] p-6">
+              <p className="section-kicker before:w-6">Shared accounts</p>
+              <p className="mt-4 text-sm leading-7 text-base-content/78">
+                Copy a screen name below and use it on the platform directly.
+              </p>
+              <ProfileSocialHandles accounts={sharedAccounts} />
+            </div>
+          ) : null}
 
           <div className="card-surface rounded-[1.8rem] p-6">
             <p className="section-kicker before:w-6">Next moves</p>

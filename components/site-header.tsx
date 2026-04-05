@@ -30,7 +30,7 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-2 lg:flex">
+        <nav className="hidden items-center gap-2 lg:flex ">
           {primaryNav.map((item) => (
             <Link
               key={item.href}
@@ -55,7 +55,7 @@ export function SiteHeader() {
       </div>
 
       <div className="page-shell pb-4 lg:hidden">
-        <nav className="flex gap-2 overflow-x-auto">
+        <nav className="flex gap-2 overflow-x-auto flex-wrap">
           {primaryNav.map((item) => (
             <Link
               key={item.href}

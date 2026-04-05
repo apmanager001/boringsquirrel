@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function NotFound() {
   return (
     <main className="page-shell py-20">
-      <section className="card-surface rounded-[2rem] p-8 sm:p-12">
+      <section className="card-surface rounded-4xl p-8 sm:p-12">
         <p className="section-kicker">404</p>
         <h1 className="display-font mt-5 text-5xl font-bold leading-none text-base-content sm:text-6xl">
           The squirrel couldn’t find that page.

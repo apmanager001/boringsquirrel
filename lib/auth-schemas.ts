@@ -2,6 +2,10 @@ import { z } from "zod";
 
 const usernamePattern = /^[a-zA-Z0-9_.]+$/;
 
+export function normalizeUsername(value: string) {
+  return value.trim().toLowerCase();
+}
+
 export const usernameSchema = z
   .string()
   .trim()

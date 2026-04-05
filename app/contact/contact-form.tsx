@@ -2,15 +2,16 @@
 
 import { useActionState } from "react";
 import { Send } from "lucide-react";
-import {
-  initialContactFormState,
-  sendContactForm,
-} from "@/app/contact/actions";
+import { sendContactForm } from "@/app/contact/actions";
 
 export function ContactForm() {
+  const initialState = {
+    status: "idle" as const,
+    message: "",
+  };
   const [state, formAction, pending] = useActionState(
     sendContactForm,
-    initialContactFormState,
+    initialState,
   );
 
   return (

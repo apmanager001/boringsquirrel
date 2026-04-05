@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Spotlight, Sparkles, Gamepad2 } from "lucide-react";
+import { ArrowRight, Spotlight, Gamepad2, Rss } from "lucide-react";
 import { GameCard } from "@/components/game-card";
 import { PostCard } from "@/components/post-card";
 import { getPopularPosts, getRecentPosts } from "@/lib/blog";
@@ -90,30 +90,36 @@ export default async function Home() {
 
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="card-surface rounded-3xl p-5">
-              <Sparkles className="size-5 text-primary" />
-              <p className="mt-4 text-sm font-semibold uppercase tracking-[0.18em] text-base-content/60">
-                Blog
-              </p>
+              <div className="flex items-center gap-3">
+                <Rss className="size-5 text-primary" />
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-base-content/60">
+                  Blog
+                </p>
+              </div>
               <p className="mt-2 text-sm leading-7 text-base-content/78">
                 Read about games, tech and everything interesting. Like posts
                 you find interetsing.
               </p>
             </div>
             <div className="card-surface rounded-3xl p-5">
+              <div className="flex items-center gap-3">
               <Gamepad2 className="size-5 text-accent" />
-              <p className="mt-4 text-sm font-semibold uppercase tracking-[0.18em] text-base-content/60">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-base-content/60">
                 Games
               </p>
+              </div>
               <p className="mt-2 text-sm leading-7 text-base-content/78">
                 Play games for free, no account required. Play classic games and
                 puzzles.
               </p>
             </div>
             <div className="card-surface rounded-3xl p-5">
-              <Spotlight className="size-5 text-secondary" />
-              <p className="mt-4 text-sm font-semibold uppercase tracking-[0.18em] text-base-content/60">
-                Leaderboard
-              </p>
+              <div className="flex items-center gap-3">
+                <Spotlight className="size-5 text-secondary" />
+                <p className="text-sm font-semibold uppercase text-base-content/60">
+                  Leaderboard
+                </p>
+              </div>
               <p className="mt-2 text-sm leading-7 text-base-content/78">
                 Verified accounts can now save best runs and climb the live game
                 leaderboards.

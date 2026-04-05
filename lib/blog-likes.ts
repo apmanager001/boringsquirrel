@@ -64,6 +64,34 @@ export async function getUserLikedPostCount(userId: string) {
   return BlogLikeModel.countDocuments({ userId });
 }
 
+export async function syncStoredBlogLikeIdentity({
+  userId,
+  username,
+  displayName,
+}: {
+  userId: string;
+  username: string;
+  displayName: string;
+}) {
+  const database = await connectToDatabase();
+
+  if (!database) {
+    return false;
+  }
+
+  await BlogLikeModel.updateMany(
+    { userId },
+    {
+      $set: {
+        username,
+        displayName,
+      },
+    },
+  );
+
+  return true;
+}
+
 export async function toggleBlogLike({
   slug,
   userId,

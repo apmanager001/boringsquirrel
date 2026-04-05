@@ -150,6 +150,34 @@ export async function getUserSavedScores(userId: string) {
   return scoreDocuments.map(mapSavedGameScore);
 }
 
+export async function syncStoredGameScoreIdentity({
+  userId,
+  username,
+  displayName,
+}: {
+  userId: string;
+  username: string;
+  displayName: string;
+}) {
+  const database = await connectToDatabase();
+
+  if (!database) {
+    return false;
+  }
+
+  await GameScoreModel.updateMany(
+    { userId },
+    {
+      $set: {
+        username,
+        displayName,
+      },
+    },
+  );
+
+  return true;
+}
+
 export async function saveGameScore({
   gameSlug,
   userId,
