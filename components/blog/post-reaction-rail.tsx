@@ -139,14 +139,14 @@ export function PostReactionRail({
     });
   }
 
-  const authNote =
-    likeState.authState === "guest"
-      ? "Sign in with a verified account to like this post."
-      : likeState.authState === "unverified"
-        ? "Email verification is required before liking posts."
-        : likeState.authState === "disabled"
-          ? "Authentication is offline in this environment, so likes are read-only."
-          : "Verified likes update the post count and popular-post sorting.";
+  // const authNote =
+  //   likeState.authState === "guest"
+  //     ? "Sign in with a verified account to like this post."
+  //     : likeState.authState === "unverified"
+  //       ? "Email verification is required before liking posts."
+  //       : likeState.authState === "disabled"
+  //         ? "Authentication is offline in this environment, so likes are read-only."
+  //         : "Verified likes update the post count and popular-post sorting.";
 
   return (
     <div className="mt-5 space-y-4">
@@ -174,14 +174,14 @@ export function PostReactionRail({
         </span>
         <span>{likeState.likeCount}</span>
       </button>
-      <div className="rounded-[1.3rem] border border-base-300/20 bg-white/35 p-4 text-sm leading-7 text-base-content/78">
+      {/* <div className="rounded-[1.3rem] border border-base-300/20 bg-white/35 p-4 text-sm leading-7 text-base-content/78">
         <p className="inline-flex items-center gap-2 font-semibold text-base-content/85">
           <ShieldCheck className="size-4 text-accent" />
           Verified reaction rules
         </p>
         <p className="mt-2">{authNote}</p>
         {likeState.message ? <p className="mt-2">{likeState.message}</p> : null}
-      </div>
+      </div> */}
     </div>
   );
 }

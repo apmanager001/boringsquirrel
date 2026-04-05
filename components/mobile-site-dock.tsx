@@ -182,124 +182,117 @@ function MobileSiteDockFrame({
 
   return (
     <>
-      <button
-        type="button"
-        aria-hidden={!drawerOpen}
-        tabIndex={drawerOpen ? 0 : -1}
-        onClick={() => setDrawerOpen(false)}
-        className={`fixed inset-0 z-40 bg-neutral/35 backdrop-blur-sm transition-opacity duration-200 lg:hidden ${
-          drawerOpen
-            ? "pointer-events-auto opacity-100"
-            : "pointer-events-none opacity-0"
-        }`}
-      />
+      {drawerOpen ? (
+        <button
+          type="button"
+          onClick={() => setDrawerOpen(false)}
+          className="fixed inset-0 z-40 bg-neutral/35 backdrop-blur-sm transition-opacity duration-200 lg:hidden"
+          aria-label="Close menu"
+        />
+      ) : null}
 
       <div className="fixed inset-x-0 bottom-0 z-50 lg:hidden">
         <div className="page-shell pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-          <div
-            className={`mb-3 max-h-[70vh] overflow-y-auto rounded-4xl border border-white/10 bg-neutral/92 p-5 text-neutral-content shadow-[0_28px_80px_rgba(12,18,10,0.42)] backdrop-blur-2xl transition-all duration-200 ${
-              drawerOpen
-                ? "translate-y-0 opacity-100"
-                : "pointer-events-none translate-y-6 opacity-0"
-            }`}
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-neutral-content/55">
-                  More links
-                </p>
-                <h2 className="display-font mt-2 text-2xl font-semibold">
-                  {siteName}
-                </h2>
-                <p className="mt-1 text-sm text-neutral-content/72">
-                  Check out your stash.
-                </p>
+          {drawerOpen ? (
+            <div className="mb-3 max-h-[70vh] overflow-y-auto rounded-4xl border border-white/10 bg-neutral/92 p-5 text-neutral-content shadow-[0_28px_80px_rgba(12,18,10,0.42)] backdrop-blur-2xl transition-all duration-200">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-neutral-content/55">
+                    More links
+                  </p>
+                  <h2 className="display-font mt-2 text-2xl font-semibold">
+                    {siteName}
+                  </h2>
+                  <p className="mt-1 text-sm text-neutral-content/72">
+                    Check out your stash.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setDrawerOpen(false)}
+                  className="inline-flex size-11 items-center justify-center rounded-full border border-white/12 bg-white/6 text-neutral-content/78 hover:bg-white/12 hover:text-neutral-content"
+                  aria-label="Close menu"
+                >
+                  <X className="size-5" />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setDrawerOpen(false)}
-                className="inline-flex size-11 items-center justify-center rounded-full border border-white/12 bg-white/6 text-neutral-content/78 hover:bg-white/12 hover:text-neutral-content"
-                aria-label="Close menu"
-              >
-                <X className="size-5" />
-              </button>
-            </div>
 
-            <div className="mt-6 grid gap-3">
-              {menuItems.map((item) => {
-                const Icon = getNavIcon(item.href);
+              <div className="mt-6 grid gap-3">
+                {menuItems.map((item) => {
+                  const Icon = getNavIcon(item.href);
 
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setDrawerOpen(false)}
-                    className={`flex items-center justify-between rounded-[1.35rem] border px-4 py-3 text-sm font-medium transition ${
-                      isActivePath(pathname, item.href)
-                        ? "border-white/16 bg-white/12 text-neutral-content"
-                        : "border-white/10 bg-white/4 text-neutral-content/82 hover:border-white/16 hover:bg-white/10 hover:text-neutral-content"
-                    }`}
-                  >
-                    <span className="inline-flex items-center gap-3">
-                      <Icon className="size-4" />
-                      {item.label}
-                    </span>
-                    <span className="text-neutral-content/45">
-                      <ExternalLink className="size-4" />
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
-
-            <div className="mt-6 rounded-[1.7rem] border border-white/10 bg-white/5 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.26em] text-neutral-content/55">
-                Account
-              </p>
-              <p className="mt-2 text-sm text-neutral-content/75">
-                {session?.user
-                  ? `Signed in as ${userLabel}.`
-                  : authEnabled
-                    ? "Create an account to save scores and react to posts."
-                    : "Authentication links stay available here while env setup is still incomplete."}
-              </p>
-
-              {session?.user ? (
-                <div className="mt-4 grid gap-3">
-                  {profileHref ? (
+                  return (
                     <Link
-                      href={profileHref}
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setDrawerOpen(false)}
+                      className={`flex items-center justify-between rounded-[1.35rem] border px-4 py-3 text-sm font-medium transition ${
+                        isActivePath(pathname, item.href)
+                          ? "border-white/16 bg-white/12 text-neutral-content"
+                          : "border-white/10 bg-white/4 text-neutral-content/82 hover:border-white/16 hover:bg-white/10 hover:text-neutral-content"
+                      }`}
+                    >
+                      <span className="inline-flex items-center gap-3">
+                        <Icon className="size-4" />
+                        {item.label}
+                      </span>
+                      <span className="text-neutral-content/45">
+                        <ExternalLink className="size-4" />
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+
+              <div className="mt-6 rounded-[1.7rem] border border-white/10 bg-white/5 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.26em] text-neutral-content/55">
+                  Account
+                </p>
+                <p className="mt-2 text-sm text-neutral-content/75">
+                  {session?.user
+                    ? `Signed in as ${userLabel}.`
+                    : authEnabled
+                      ? "Create an account to save scores and react to posts."
+                      : "Authentication links stay available here while env setup is still incomplete."}
+                </p>
+
+                {session?.user ? (
+                  <div className="mt-4 grid gap-3">
+                    {profileHref ? (
+                      <Link
+                        href={profileHref}
+                        onClick={() => setDrawerOpen(false)}
+                        className="inline-flex items-center gap-3 rounded-[1.2rem] border border-white/10 bg-white/4 px-4 py-3 text-sm font-medium text-neutral-content/82 hover:border-white/16 hover:bg-white/10 hover:text-neutral-content"
+                      >
+                        <CircleUserRound className="size-4" />
+                        Your Profile
+                      </Link>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={handleSignOut}
+                      disabled={signOutPending}
+                      className="inline-flex items-center gap-3 rounded-[1.2rem] border border-white/10 bg-white/4 px-4 py-3 text-left text-sm font-medium text-neutral-content/82 hover:border-white/16 hover:bg-white/10 hover:text-neutral-content disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <LogOut className="size-4" />
+                      {signOutPending ? "Signing out..." : "Sign out"}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mt-4 grid gap-3">
+                    <Link
+                      href="/register"
                       onClick={() => setDrawerOpen(false)}
                       className="inline-flex items-center gap-3 rounded-[1.2rem] border border-white/10 bg-white/4 px-4 py-3 text-sm font-medium text-neutral-content/82 hover:border-white/16 hover:bg-white/10 hover:text-neutral-content"
                     >
-                      <CircleUserRound className="size-4" />
-                      Your Profile
+                      <UserRoundPlus className="size-4" />
+                      Register
                     </Link>
-                  ) : null}
-                  <button
-                    type="button"
-                    onClick={handleSignOut}
-                    disabled={signOutPending}
-                    className="inline-flex items-center gap-3 rounded-[1.2rem] border border-white/10 bg-white/4 px-4 py-3 text-left text-sm font-medium text-neutral-content/82 hover:border-white/16 hover:bg-white/10 hover:text-neutral-content disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    <LogOut className="size-4" />
-                    {signOutPending ? "Signing out..." : "Sign out"}
-                  </button>
-                </div>
-              ) : (
-                <div className="mt-4 grid gap-3">
-                  <Link
-                    href="/register"
-                    onClick={() => setDrawerOpen(false)}
-                    className="inline-flex items-center gap-3 rounded-[1.2rem] border border-white/10 bg-white/4 px-4 py-3 text-sm font-medium text-neutral-content/82 hover:border-white/16 hover:bg-white/10 hover:text-neutral-content"
-                  >
-                    <UserRoundPlus className="size-4" />
-                    Register
-                  </Link>
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          ) : null}
 
           <div className="grid grid-cols-[1fr_1fr_auto_1fr_1fr] items-end gap-1 rounded-4xl border border-base-300/18 bg-white/74 p-2 shadow-[0_20px_55px_rgba(15,25,12,0.24)] backdrop-blur-2xl">
             {dockItems.map((item) => (
