@@ -35,6 +35,8 @@ yarn-error.log*
 
 #md files
 *.md
+AGENTS.md
+CLAUDE.md
 
 # vercel
 .vercel

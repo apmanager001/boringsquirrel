@@ -22,7 +22,12 @@ const scoreSubmissionSchema = z.object({
   details: z
     .record(
       z.string(),
-      z.union([z.string().max(120), z.number().finite(), z.boolean(), z.null()]),
+      z.union([
+        z.string().max(120),
+        z.number().finite(),
+        z.boolean(),
+        z.null(),
+      ]),
     )
     .default({}),
 });
@@ -73,7 +78,10 @@ export async function GET(request: Request, { params }: RouteContext) {
   const { slug } = await params;
 
   if (!isSupportedScoreGame(slug)) {
-    return NextResponse.json({ ok: false, message: "Game not found." }, { status: 404 });
+    return NextResponse.json(
+      { ok: false, message: "Game not found." },
+      { status: 404 },
+    );
   }
 
   const { authState, identity } = await getFeatureAccess(request.headers);
@@ -95,7 +103,10 @@ export async function POST(request: Request, { params }: RouteContext) {
   const { slug } = await params;
 
   if (!isSupportedScoreGame(slug)) {
-    return NextResponse.json({ ok: false, message: "Game not found." }, { status: 404 });
+    return NextResponse.json(
+      { ok: false, message: "Game not found." },
+      { status: 404 },
+    );
   }
 
   const { authState, identity } = await getFeatureAccess(request.headers);
@@ -118,7 +129,11 @@ export async function POST(request: Request, { params }: RouteContext) {
 
   if (!parsedBody.success) {
     return NextResponse.json(
-      { ok: false, message: parsedBody.error.issues[0]?.message ?? "Invalid score payload." },
+      {
+        ok: false,
+        message:
+          parsedBody.error.issues[0]?.message ?? "Invalid score payload.",
+      },
       { status: 400 },
     );
   }

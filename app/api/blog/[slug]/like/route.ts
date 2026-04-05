@@ -70,7 +70,10 @@ export async function GET(request: Request, { params }: RouteContext) {
   const post = await getBlogPostBySlug(slug);
 
   if (!post) {
-    return NextResponse.json({ ok: false, message: "Post not found." }, { status: 404 });
+    return NextResponse.json(
+      { ok: false, message: "Post not found." },
+      { status: 404 },
+    );
   }
 
   const { authState, identity } = await getFeatureAccess(request.headers);
@@ -91,7 +94,10 @@ export async function POST(request: Request, { params }: RouteContext) {
   const post = await getBlogPostBySlug(slug);
 
   if (!post) {
-    return NextResponse.json({ ok: false, message: "Post not found." }, { status: 404 });
+    return NextResponse.json(
+      { ok: false, message: "Post not found." },
+      { status: 404 },
+    );
   }
 
   const { authState, identity } = await getFeatureAccess(request.headers);

@@ -11,9 +11,7 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { ScorePanel } from "@/components/games/score-panel";
-import {
-  AcornSweeperAboveBoard,
-} from "@/components/games/acornsweeper-above-board";
+import { AcornSweeperAboveBoard } from "@/components/games/acornsweeper-above-board";
 import {
   armAcornSweeperBoard,
   calculateAcornSweeperScore,
@@ -131,8 +129,11 @@ export function AcornSweeperGame() {
     [game.board],
   );
   const totalSafeCells =
-    difficultyDetails.rows * difficultyDetails.cols - difficultyDetails.acornCount;
-  const progressPercent = Math.round((safeRevealedCount / totalSafeCells) * 100);
+    difficultyDetails.rows * difficultyDetails.cols -
+    difficultyDetails.acornCount;
+  const progressPercent = Math.round(
+    (safeRevealedCount / totalSafeCells) * 100,
+  );
   const scorePreview = useMemo(
     () =>
       game.status === "lost"
@@ -145,7 +146,9 @@ export function AcornSweeperGame() {
   );
   const denseBoard = difficultyDetails.cols >= 14;
   const iconSizeClass = denseBoard ? "size-4 sm:size-5" : "size-5 sm:size-6";
-  const digitSizeClass = denseBoard ? "text-sm sm:text-base" : "text-base sm:text-lg";
+  const digitSizeClass = denseBoard
+    ? "text-sm sm:text-base"
+    : "text-base sm:text-lg";
 
   function resetGame(nextDifficulty = game.difficulty) {
     startTransition(() => {
@@ -332,7 +335,9 @@ export function AcornSweeperGame() {
                         <button
                           key={`${rowIndex}-${colIndex}`}
                           type="button"
-                          onClick={() => handlePrimaryAction(rowIndex, colIndex)}
+                          onClick={() =>
+                            handlePrimaryAction(rowIndex, colIndex)
+                          }
                           onContextMenu={(event) => {
                             event.preventDefault();
                             toggleFlag(rowIndex, colIndex);
@@ -346,18 +351,28 @@ export function AcornSweeperGame() {
                                 ? "bg-accent/10 hover:bg-accent/16"
                                 : "bg-base-100/78 hover:bg-base-100"
                           } ${
-                            rowIndex === 0 ? "border-t border-t-base-300/20" : ""
+                            rowIndex === 0
+                              ? "border-t border-t-base-300/20"
+                              : ""
                           } ${
-                            colIndex === 0 ? "border-l border-l-base-300/20" : ""
+                            colIndex === 0
+                              ? "border-l border-l-base-300/20"
+                              : ""
                           }`}
-                          aria-label={buildCellAriaLabel(rowIndex, colIndex, cell)}
+                          aria-label={buildCellAriaLabel(
+                            rowIndex,
+                            colIndex,
+                            cell,
+                          )}
                         >
                           {cell.revealed ? (
                             cell.hasAcorn ? (
                               <span className="flex h-full items-center justify-center">
                                 <Nut
                                   className={`${iconSizeClass} ${
-                                    cell.exploded ? "text-error" : "text-base-content/78"
+                                    cell.exploded
+                                      ? "text-error"
+                                      : "text-base-content/78"
                                   }`}
                                 />
                               </span>
@@ -374,7 +389,9 @@ export function AcornSweeperGame() {
                             )
                           ) : cell.flagged ? (
                             <span className="flex h-full items-center justify-center">
-                              <Squirrel className={`${iconSizeClass} text-accent`} />
+                              <Squirrel
+                                className={`${iconSizeClass} text-accent`}
+                              />
                             </span>
                           ) : null}
                         </button>
@@ -430,15 +447,15 @@ export function AcornSweeperGame() {
                 </div>
 
                 <div className="mt-4 rounded-[1.2rem] bg-base-100/75 p-4 text-sm leading-7 text-base-content/74">
-                  <div className="flex items-center gap-2">
+                  <div className="">
                     <Nut className="size-4 text-secondary" />
                     Hidden acorns end the run.
                   </div>
-                  <div className="mt-2 flex items-center gap-2">
+                  <div className="mt-2">
                     <Squirrel className="size-4 text-accent" />
                     Squirrels mark danger without opening the square.
                   </div>
-                  <div className="mt-2 flex items-center gap-2">
+                  <div className="mt-2">
                     <TriangleAlert className="size-4 text-primary" />
                     Clear every safe square to bank the score.
                   </div>

@@ -39,9 +39,7 @@ export async function getBlogLikeSnapshot(slug: string, viewerUserId?: string) {
   }
 
   const [metric, like] = await Promise.all([
-    BlogMetricModel.findOne({ slug })
-      .select({ likeCount: 1, _id: 0 })
-      .lean(),
+    BlogMetricModel.findOne({ slug }).select({ likeCount: 1, _id: 0 }).lean(),
     viewerUserId
       ? BlogLikeModel.findOne({ slug, userId: viewerUserId })
           .select({ _id: 1 })

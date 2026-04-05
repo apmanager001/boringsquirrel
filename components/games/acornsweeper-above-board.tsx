@@ -1,9 +1,4 @@
-import {
-  CheckCircle2,
-  Sparkles,
-  Squirrel,
-  TriangleAlert,
-} from "lucide-react";
+import { CheckCircle2, Sparkles, Squirrel, TriangleAlert } from "lucide-react";
 
 type DifficultyDetails = {
   label: string;

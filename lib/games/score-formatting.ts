@@ -1,6 +1,9 @@
 import { formatAcornSweeperTime } from "@/lib/games/acornsweeper";
 import { formatSudokuTime } from "@/lib/games/sudoku";
-import type { GameScoreDetails, SupportedScoreGameSlug } from "@/lib/game-scores";
+import type {
+  GameScoreDetails,
+  SupportedScoreGameSlug,
+} from "@/lib/game-scores";
 
 function capitalize(value: string) {
   if (!value) {

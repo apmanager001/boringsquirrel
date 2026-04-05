@@ -31,4 +31,5 @@ const blogLikeSchema = new Schema(
 
 blogLikeSchema.index({ slug: 1, userId: 1 }, { unique: true });
 
-export const BlogLikeModel = models.BlogLike || model("BlogLike", blogLikeSchema);
+export const BlogLikeModel =
+  models.BlogLike || model("BlogLike", blogLikeSchema);

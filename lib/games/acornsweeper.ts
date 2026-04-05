@@ -27,7 +27,8 @@ const difficultyConfig: Record<AcornSweeperDifficulty, DifficultyConfig> = {
     rows: 9,
     cols: 9,
     acornCount: 10,
-    description: "A compact field with a forgiving acorn count and a fast pace.",
+    description:
+      "A compact field with a forgiving acorn count and a fast pace.",
     baseScore: 1600,
     parSeconds: 180,
     speedMultiplier: 1.9,
@@ -37,7 +38,8 @@ const difficultyConfig: Record<AcornSweeperDifficulty, DifficultyConfig> = {
     rows: 12,
     cols: 12,
     acornCount: 24,
-    description: "A broader clearing that asks for cleaner flag reads and steadier tempo.",
+    description:
+      "A broader clearing that asks for cleaner flag reads and steadier tempo.",
     baseScore: 2600,
     parSeconds: 360,
     speedMultiplier: 2.5,
@@ -47,7 +49,8 @@ const difficultyConfig: Record<AcornSweeperDifficulty, DifficultyConfig> = {
     rows: 16,
     cols: 16,
     acornCount: 40,
-    description: "A dense grid where efficient scanning matters as much as nerve.",
+    description:
+      "A dense grid where efficient scanning matters as much as nerve.",
     baseScore: 3600,
     parSeconds: 600,
     speedMultiplier: 3.2,
@@ -82,12 +85,7 @@ function keyForCell(row: number, col: number) {
   return `${row}:${col}`;
 }
 
-function isInsideBoard(
-  row: number,
-  col: number,
-  rows: number,
-  cols: number,
-) {
+function isInsideBoard(row: number, col: number, rows: number, cols: number) {
   return row >= 0 && row < rows && col >= 0 && col < cols;
 }
 
@@ -117,12 +115,7 @@ function getAdjacentPositions(
   return positions;
 }
 
-function getSafeZoneKeys(
-  row: number,
-  col: number,
-  rows: number,
-  cols: number,
-) {
+function getSafeZoneKeys(row: number, col: number, rows: number, cols: number) {
   return new Set([
     keyForCell(row, col),
     ...getAdjacentPositions(row, col, rows, cols).map((position) =>
@@ -136,12 +129,16 @@ function countAdjacentAcorns(
   row: number,
   col: number,
 ) {
-  return getAdjacentPositions(row, col, board.length, board[0]?.length ?? 0)
-    .reduce(
-      (count, position) =>
-        count + (board[position.row]?.[position.col]?.hasAcorn ? 1 : 0),
-      0,
-    );
+  return getAdjacentPositions(
+    row,
+    col,
+    board.length,
+    board[0]?.length ?? 0,
+  ).reduce(
+    (count, position) =>
+      count + (board[position.row]?.[position.col]?.hasAcorn ? 1 : 0),
+    0,
+  );
 }
 
 export function getAcornSweeperDifficultyConfig(
@@ -179,7 +176,8 @@ export function armAcornSweeperBoard(
   safeRow: number,
   safeCol: number,
 ) {
-  const { rows, cols, acornCount } = getAcornSweeperDifficultyConfig(difficulty);
+  const { rows, cols, acornCount } =
+    getAcornSweeperDifficultyConfig(difficulty);
   const nextBoard = board.map((row) =>
     row.map((cell) => ({
       ...createHiddenCell(),
@@ -188,10 +186,13 @@ export function armAcornSweeperBoard(
     })),
   );
   const safeZoneKeys = getSafeZoneKeys(safeRow, safeCol, rows, cols);
-  const candidatePositions = Array.from({ length: rows * cols }, (_, index) => ({
-    row: Math.floor(index / cols),
-    col: index % cols,
-  }));
+  const candidatePositions = Array.from(
+    { length: rows * cols },
+    (_, index) => ({
+      row: Math.floor(index / cols),
+      col: index % cols,
+    }),
+  );
   const safeFallbackKeys = new Set([keyForCell(safeRow, safeCol)]);
   const availablePositions = candidatePositions.filter(
     (position) => !safeZoneKeys.has(keyForCell(position.row, position.col)),
