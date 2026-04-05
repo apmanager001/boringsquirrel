@@ -158,10 +158,12 @@ export default async function PublicProfilePage({
 
         <div className="space-y-6">
           <div className="card-surface rounded-[1.8rem] p-6">
-            <BadgeCheck className="size-5 text-primary" />
-            <h2 className="display-font mt-4 text-2xl font-semibold">
-              Profile summary
-            </h2>
+            <div className="flex items-center gap-3">
+              <BadgeCheck className="size-5 text-primary" />
+              <h2 className="display-font text-2xl font-semibold">
+                Profile summary
+              </h2>
+            </div>
             <div className="mt-5 space-y-4 text-sm leading-7 text-base-content/78">
               <div className="flex items-center justify-between gap-4">
                 <span>Username</span>

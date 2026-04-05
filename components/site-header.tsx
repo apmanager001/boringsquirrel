@@ -7,7 +7,7 @@ import { primaryNav, siteConfig } from "@/lib/site";
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-50 border-b border-base-300/20 bg-base-100/70 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 hidden border-b border-base-300/20 bg-base-100/70 backdrop-blur-xl lg:block">
       <div className="page-shell flex items-center justify-between gap-4 py-4">
         <Link href="/" className="flex min-w-0 items-center gap-3">
           <span className="relative block size-12 overflow-hidden rounded-2xl border border-base-300/30 bg-white/60 shadow-lg shadow-base-300/20">
@@ -30,7 +30,7 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-2 lg:flex ">
+        <nav className="flex items-center gap-2">
           {primaryNav.map((item) => (
             <Link
               key={item.href}
@@ -52,20 +52,6 @@ export function SiteHeader() {
           </Link>
           <SessionCta authEnabled={hasBetterAuthConfig()} />
         </div>
-      </div>
-
-      <div className="page-shell pb-4 lg:hidden">
-        <nav className="flex gap-2 overflow-x-auto flex-wrap">
-          {primaryNav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="shrink-0 rounded-full border border-base-300/20 bg-white/40 px-4 py-2 text-sm font-medium text-base-content/85"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
       </div>
     </header>
   );

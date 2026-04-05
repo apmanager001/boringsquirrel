@@ -489,8 +489,8 @@ export function SudokuGame() {
                 </p>
               </div> */}
               <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_12rem]">
-                <div className="rounded-[1.75rem] border border-base-300/15 bg-base-100/55 p-3 sm:p-4">
-                  <div className="grid grid-cols-9 overflow-hidden rounded-[1.2rem] border border-base-300/20 bg-white/55">
+                <div className="rounded-[1.75rem] md:border border-base-300/15 bg-base-100/55 sm:p-4">
+                  <div className="grid grid-cols-9 overflow-hidden md:border border-base-300/20 bg-white/55">
                     {Array.from({ length: 9 }, (_, row) =>
                       Array.from({ length: 9 }, (_, col) => {
                         const cellValue = game.board[row]?.[col] ?? 0;
@@ -580,7 +580,7 @@ export function SudokuGame() {
                 </div>
 
                 <div className="rounded-3xl border border-base-300/15 bg-white/38 p-4">
-                  <div className="grid grid-cols-9 md:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-5 md:grid-cols-2 gap-2">
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((value) => {
                       const complete = (digitCounts.get(value) ?? 0) === 9;
 
@@ -599,6 +599,13 @@ export function SudokuGame() {
                         </button>
                       );
                     })}
+                    <div
+                      className="btn h-12 rounded-2xl border border-base-300/20 bg-base-100/75 hover:bg-base-100 sm:col-span-1 tooltip tooltip-top md:tooltip-left"
+                      data-tip={`N toggles pencil mode. Arrow keys move the cursor.
+                    Backspace or Delete clears the selected cell.`}
+                    >
+                      <Info className="text-info" />
+                    </div>
                     <button
                       type="button"
                       onClick={clearSelectedCell}
@@ -622,13 +629,6 @@ export function SudokuGame() {
                     >
                       <NotebookPen className="size-4" />
                     </button>
-                    <div
-                      className="flex justify-center items-center tooltip tooltip-top md:tooltip-left"
-                      data-tip={`N toggles pencil mode. Arrow keys move the cursor.
-                    Backspace or Delete clears the selected cell.`}
-                    >
-                      <Info className="text-info" />
-                    </div>
                   </div>
                   {/* <p className="mt-3 text-sm leading-7 text-base-content/74">
                     `N` toggles pencil mode. Arrow keys move the cursor.

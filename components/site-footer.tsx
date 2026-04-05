@@ -7,7 +7,7 @@ export function SiteFooter() {
   const socialLinks = getSocialLinks();
 
   return (
-    <footer className="mt-20 border-t border-base-300/20 bg-neutral text-neutral-content">
+    <footer className="mt-20 hidden border-t border-base-300/20 bg-neutral text-neutral-content lg:block">
       <div className="page-shell grid gap-10 py-14 md:grid-cols-3">
         <div className="space-y-4">
           <div className="flex items-center gap-3">
@@ -101,9 +101,7 @@ export function SiteFooter() {
 
       <div className="border-t border-white/8 py-4 text-sm text-neutral-content/60">
         <div className="page-shell flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p>
-            © 2026 {siteConfig.name}. Built for discoverability and repeat play.
-          </p>
+          <p>© 2026 {siteConfig.name}. All rights reserved.</p>
         </div>
       </div>
     </footer>

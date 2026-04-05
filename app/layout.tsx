@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, IBM_Plex_Mono, Sora } from "next/font/google";
 import { AnalyticsScript } from "@/components/analytics-script";
+import { MobileSiteDock } from "@/components/mobile-site-dock";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { hasBetterAuthConfig } from "@/lib/env";
 import { absoluteUrl, siteConfig } from "@/lib/site";
 import "./globals.css";
 
@@ -91,6 +93,17 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const mobileDockItems = [
+    { label: "Blog", href: "/blog" },
+    { label: "Games", href: "/games" },
+  ] as const;
+
+  const mobileMenuItems = [
+    { label: "Leaderboard", href: "/leaderboard" },
+    { label: "Contact", href: "/contact" },
+    { label: "Latest Posts", href: "/blog/recent" },
+  ] as const;
+
   return (
     <html
       lang="en"
@@ -101,9 +114,18 @@ export default function RootLayout({
       <body className="min-h-full font-sans text-base-content">
         <div className="flex min-h-screen flex-col">
           <SiteHeader />
-          <div className="flex-1">{children}</div>
+          <div className="flex-1 pb-[calc(6.5rem+env(safe-area-inset-bottom))] lg:pb-0">
+            {children}
+          </div>
           <SiteFooter />
         </div>
+        <MobileSiteDock
+          siteName={siteConfig.name}
+          logoPath={siteConfig.logoPath}
+          authEnabled={hasBetterAuthConfig()}
+          dockItems={mobileDockItems}
+          menuItems={mobileMenuItems}
+        />
         <AnalyticsScript />
       </body>
     </html>

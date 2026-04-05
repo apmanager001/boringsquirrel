@@ -53,7 +53,7 @@ export default async function LeaderboardPage() {
   ).filter((section): section is LeaderboardSection => Boolean(section));
 
   return (
-    <main className="page-shell py-14 sm:py-20">
+    <main className="page-shell py-6 md:py-14 sm:py-20">
       <section className="space-y-6">
         <p className="section-kicker">Leaderboard</p>
         <div className="space-y-4">
@@ -68,17 +68,17 @@ export default async function LeaderboardPage() {
         </div>
       </section>
 
-      <section className="mt-12 grid gap-6">
+      <section className="mt-4 md:mt-12 grid gap-6">
         {leaderboardSections.map(({ game, scoreboard }) => (
           <article
             key={game.slug}
-            className="card-surface rounded-[1.8rem] p-6 sm:p-7"
+            className="card-surface min-w-0 rounded-[1.8rem] p-6 sm:p-7"
           >
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div className="max-w-3xl">
                 <p className="section-kicker before:w-5">{game.name}</p>
                 <h2 className="display-font mt-3 text-3xl font-semibold text-base-content">
-                  Verified best runs
+                  Verified Games
                 </h2>
                 <p className="mt-3 text-sm leading-7 text-base-content/78">
                   {game.scoreHook}
@@ -109,8 +109,8 @@ export default async function LeaderboardPage() {
                 No verified scores have been saved for {game.name} yet.
               </div>
             ) : (
-              <div className="mt-6 overflow-x-auto rounded-[1.4rem] border border-base-300/15 bg-white/45">
-                <table className="min-w-176 w-full border-separate border-spacing-0">
+              <div className="mt-6 max-w-full overflow-x-auto rounded-[1.4rem] border border-base-300/15 bg-white/45">
+                <table className="w-full min-w-160 border-separate border-spacing-0 md:min-w-176">
                   <thead>
                     <tr>
                       <th className="border-b border-base-300/15 px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.24em] text-base-content/45">
@@ -133,10 +133,10 @@ export default async function LeaderboardPage() {
                         game.slug,
                         entry.details,
                       );
-                    //   const hasDistinctDisplayName =
-                    //     entry.displayName.length > 0 &&
-                    //     entry.displayName.toLowerCase() !==
-                    //       entry.username.toLowerCase();
+                      //   const hasDistinctDisplayName =
+                      //     entry.displayName.length > 0 &&
+                      //     entry.displayName.toLowerCase() !==
+                      //       entry.username.toLowerCase();
 
                       return (
                         <tr key={`${game.slug}-${entry.userId}`}>

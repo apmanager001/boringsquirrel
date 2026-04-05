@@ -18,7 +18,7 @@ export default function OilcapPage() {
   }
 
   return (
-    <main className="page-shell py-14 sm:py-20">
+    <main className="page-shell py-6 md:py-14 sm:py-20 ">
       <section className="grid gap-8 xl:items-start">
         <div className="space-y-8">
           <div className="space-y-5">
