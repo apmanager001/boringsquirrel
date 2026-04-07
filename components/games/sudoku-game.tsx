@@ -517,7 +517,7 @@ export function SudokuGame({ initialPuzzle }: SudokuGameProps) {
                   Solve the board
                 </h2>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 sm:hidden">
                 <div className="tooltip tooltip-left text-primary" data-tip={scoreHook}>
                   <Ruler className="size-4" />
                 </div>
@@ -552,7 +552,7 @@ export function SudokuGame({ initialPuzzle }: SudokuGameProps) {
                       ),
                     })
                   }
-                  className="btn btn-ghost btn-circle sm:hidden"
+                  className="btn btn-ghost btn-circle"
                   aria-label="Open Sudoku information"
                 >
                   <Menu className="size-5" />
