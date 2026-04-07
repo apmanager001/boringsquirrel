@@ -28,6 +28,7 @@ type SudokuAboveBoardProps = {
   statusTitle: string;
   statusBody: string;
   onToggleHint: () => void;
+  compact?: boolean;
 };
 
 function SudokuAboveBoard({
@@ -38,6 +39,7 @@ function SudokuAboveBoard({
   statusTitle,
   statusBody,
   onToggleHint,
+  compact = false,
 }: SudokuAboveBoardProps) {
   const hintText = showHint
     ? selectedCandidates.length > 0
@@ -56,9 +58,25 @@ function SudokuAboveBoard({
       <Keyboard className="size-5 shrink-0 text-primary" />
     );
 
+  const containerClassName = compact
+    ? "rounded-[1.35rem] border border-base-300/15 bg-white/50 p-4"
+    : "rounded-[1.6rem] border border-base-300/15 bg-white/40 p-5";
+  const gridClassName = compact
+    ? "grid gap-4"
+    : "grid gap-4 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1fr)_minmax(13rem,0.7fr)] lg:items-start";
+  const statusSectionClassName = compact
+    ? "min-w-0 border-t border-base-300/15 pt-4"
+    : "min-w-0 border-t border-base-300/15 pt-4 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0";
+  const hintSectionClassName = compact
+    ? "flex flex-col gap-2 border-t border-base-300/15 pt-4"
+    : "flex h-full flex-col items-start justify-center gap-2 border-t border-base-300/15 pt-4 lg:items-end lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0";
+  const hintTextClassName = compact
+    ? "max-w-full rounded-2xl bg-base-100/75 px-3 py-2 text-xs font-medium leading-5 text-base-content/72"
+    : "max-w-full rounded-2xl bg-base-100/75 px-3 py-2 text-xs font-medium leading-5 text-base-content/72 sm:text-sm lg:max-w-xs";
+
   return (
-    <div className="rounded-[1.6rem] border border-base-300/15 bg-white/40 p-5">
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1fr)_minmax(13rem,0.7fr)] lg:items-start">
+    <div className={containerClassName}>
+      <div className={gridClassName}>
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <p className="section-kicker before:w-4">Difficulty</p>
@@ -85,7 +103,7 @@ function SudokuAboveBoard({
           </p>
         </div>
 
-        <div className="min-w-0 border-t border-base-300/15 pt-4 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0">
+        <div className={statusSectionClassName}>
           <div className="flex items-start gap-2 rounded-2xl bg-base-100/70 px-3 py-2.5">
             {statusIcon}
             <div className="min-w-0">
@@ -103,7 +121,7 @@ function SudokuAboveBoard({
           </p>
         </div>
 
-        <div className="flex flex-col justify-center items-start h-full gap-2 border-t border-base-300/15 pt-4 lg:items-end lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0">
+        <div className={hintSectionClassName}>
           <label
             htmlFor="sudoku-hint-toggle"
             className="flex items-center gap-3 rounded-full bg-base-100/75 px-3 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-base-content/65"
@@ -118,9 +136,7 @@ function SudokuAboveBoard({
             />
           </label>
 
-          <p className="max-w-full rounded-2xl bg-base-100/75 px-3 py-2 text-xs font-medium leading-5 text-base-content/72 sm:text-sm lg:max-w-xs">
-            {hintText}
-          </p>
+          <p className={hintTextClassName}>{hintText}</p>
         </div>
       </div>
     </div>

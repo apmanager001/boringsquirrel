@@ -7,7 +7,15 @@ import {
   useState,
   useTransition,
 } from "react";
-import { Eraser, NotebookPen, RefreshCcw, Trophy, Info } from "lucide-react";
+import {
+  Eraser,
+  Info,
+  Menu,
+  NotebookPen,
+  RefreshCcw,
+  Trophy,
+  Ruler,
+} from "lucide-react";
 import {
   calculateSudokuScore,
   cloneSudokuGrid,
@@ -19,9 +27,14 @@ import {
   getSudokuPeerPositions,
   isSudokuSolved,
   type SudokuDifficulty,
+  type SudokuPuzzle,
 } from "@/lib/games/sudoku";
-import { ScorePanel } from "@/components/games/score-panel";
+import { useGameInfoDrawer } from "@/components/games/game-info-drawer";
+import { LazyScorePanel } from "@/components/games/lazy-score-panel";
 import SudokuAboveBoard from "./sudoku-aboveBoard";
+import { getGameBySlug } from "@/lib/site";
+
+const scoreHook = getGameBySlug("sudoku")?.scoreHook;
 
 type SelectedCell = {
   row: number;
@@ -47,6 +60,19 @@ type SudokuGameState = {
   errorCell: SelectedCell | null;
 };
 
+type SudokuScoreSummaryProps = {
+  score: number;
+  elapsedSeconds: number;
+  mistakes: number;
+  clueCount: number;
+  progressPercent: number;
+  compact?: boolean;
+};
+
+type SudokuGameProps = {
+  initialPuzzle?: SudokuPuzzle;
+};
+
 function createEmptyNotes() {
   return Array.from({ length: 9 }, () =>
     Array.from({ length: 9 }, () => [] as number[]),
@@ -65,12 +91,13 @@ function getInitialSelectedCell(board: number[][]) {
   return { row: 0, col: 0 };
 }
 
-function createSudokuGameState(difficulty: SudokuDifficulty): SudokuGameState {
-  const puzzle = createSudokuPuzzle(difficulty);
-
+function createSudokuGameStateFromPuzzle(
+  puzzle: SudokuPuzzle,
+  gameId = 1,
+): SudokuGameState {
   return {
-    id: Date.now() + Math.floor(Math.random() * 1000),
-    difficulty,
+    id: gameId,
+    difficulty: puzzle.difficulty,
     puzzle: puzzle.puzzle,
     solution: puzzle.solution,
     board: cloneSudokuGrid(puzzle.puzzle),
@@ -84,6 +111,15 @@ function createSudokuGameState(difficulty: SudokuDifficulty): SudokuGameState {
     score: null,
     errorCell: null,
   };
+}
+
+function createSudokuGameState(difficulty: SudokuDifficulty): SudokuGameState {
+  const puzzle = createSudokuPuzzle(difficulty);
+
+  return createSudokuGameStateFromPuzzle(
+    puzzle,
+    Date.now() + Math.floor(Math.random() * 1000),
+  );
 }
 
 function cloneNotes(notes: SudokuNotes) {
@@ -125,13 +161,80 @@ function getDigitCounts(board: number[][]) {
   return counts;
 }
 
-export function SudokuGame() {
+function SudokuScoreSummary({
+  score,
+  elapsedSeconds,
+  mistakes,
+  clueCount,
+  progressPercent,
+  compact = false,
+}: SudokuScoreSummaryProps) {
+  const cardClassName = compact
+    ? "rounded-[1.35rem] border border-primary/15 bg-white/50 p-4"
+    : "rounded-[1.6rem] border border-base-300/15 bg-white/40 p-5";
+  const iconClassName = compact ? "size-6 text-primary" : "size-7 text-primary";
+  const scoreClassName = compact
+    ? "display-font mt-2 text-4xl font-semibold text-base-content"
+    : "display-font mt-2 text-5xl font-semibold text-base-content";
+  const gridClassName = compact
+    ? "mt-4 grid grid-cols-2 gap-2"
+    : "mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-2";
+  const statCardClassName = compact
+    ? "rounded-[1rem] bg-base-100/80 p-3"
+    : "rounded-[1.2rem] bg-base-100/70 p-4";
+  const statLabelClassName = compact
+    ? "text-[0.65rem] uppercase tracking-[0.26em] text-base-content/45"
+    : "text-xs uppercase tracking-[0.3em] text-base-content/45";
+  const statValueClassName = compact
+    ? "mt-1 text-xl font-semibold"
+    : "mt-2 text-2xl font-semibold";
+
+  return (
+    <div className={cardClassName}>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-base-content/45">
+            Score
+          </p>
+          <p className={scoreClassName}>{score}</p>
+        </div>
+        <Trophy className={iconClassName} />
+      </div>
+
+      <div className={gridClassName}>
+        <div className={statCardClassName}>
+          <p className={statLabelClassName}>Time</p>
+          <p className={statValueClassName}>
+            {formatSudokuTime(elapsedSeconds)}
+          </p>
+        </div>
+        <div className={statCardClassName}>
+          <p className={statLabelClassName}>Mistakes</p>
+          <p className={statValueClassName}>{mistakes}</p>
+        </div>
+        <div className={statCardClassName}>
+          <p className={statLabelClassName}>Clues</p>
+          <p className={statValueClassName}>{clueCount}</p>
+        </div>
+        <div className={statCardClassName}>
+          <p className={statLabelClassName}>Progress</p>
+          <p className={statValueClassName}>{progressPercent}%</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function SudokuGame({ initialPuzzle }: SudokuGameProps) {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [game, setGame] = useState<SudokuGameState>(() =>
-    createSudokuGameState("medium"),
+    initialPuzzle
+      ? createSudokuGameStateFromPuzzle(initialPuzzle)
+      : createSudokuGameState("medium"),
   );
   const [showHint, setShowHint] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const { openDrawer } = useGameInfoDrawer();
 
   useEffect(() => {
     if (game.status !== "playing") {
@@ -406,15 +509,58 @@ export function SudokuGame() {
     <div className="card-surface rounded-4xl p-4 sm:p-6">
       <div className="flex flex-col gap-6 xl:flex-row">
         <div className="min-w-0 flex-1">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="section-kicker before:w-6">Ready to Play</p>
-              <h2 className="display-font text-3xl font-semibold">
-                Solve the board
-              </h2>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center justify-center sm:justify-between">
+            <div className="flex items-start justify-between gap-4 sm:block">
+              <div>
+                <p className="section-kicker before:w-6">Ready to Play</p>
+                <h2 className="display-font text-3xl font-semibold">
+                  Solve the board
+                </h2>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="tooltip tooltip-left text-primary" data-tip={scoreHook}>
+                  <Ruler className="size-4" />
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    openDrawer({
+                      title: "Sudoku info",
+                      content: (
+                        <div className="space-y-4">
+                          <SudokuScoreSummary
+                            score={game.score ?? scorePreview}
+                            elapsedSeconds={elapsedSeconds}
+                            mistakes={game.mistakes}
+                            clueCount={game.clueCount}
+                            progressPercent={progressPercent}
+                            compact
+                          />
+                          <SudokuAboveBoard
+                            game={game}
+                            showHint={showHint}
+                            selectedCandidates={selectedCandidates}
+                            difficultyDetails={difficultyDetails}
+                            statusTitle={statusTitle}
+                            statusBody={statusBody}
+                            onToggleHint={() =>
+                              setShowHint((current) => !current)
+                            }
+                            compact
+                          />
+                        </div>
+                      ),
+                    })
+                  }
+                  className="btn btn-ghost btn-circle sm:hidden"
+                  aria-label="Open Sudoku information"
+                >
+                  <Menu className="size-5" />
+                </button>
+              </div>
             </div>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
               {(["easy", "medium", "hard"] as SudokuDifficulty[]).map(
                 (difficulty) => {
                   const active = difficulty === game.difficulty;
@@ -424,7 +570,7 @@ export function SudokuGame() {
                       key={difficulty}
                       type="button"
                       onClick={() => resetGame(difficulty)}
-                      className={`btn rounded-full ${
+                      className={`btn btn-sm md:btn-md rounded-full ${
                         active
                           ? "btn-primary"
                           : "border border-base-300/20 bg-white/35 text-base-content hover:bg-white/55"
@@ -438,7 +584,7 @@ export function SudokuGame() {
               <button
                 type="button"
                 onClick={() => resetGame()}
-                className="btn btn-secondary rounded-full"
+                className="btn btn-sm md:btn-md btn-secondary rounded-full"
               >
                 <RefreshCcw className="size-4" />
                 {isPending ? "Generating..." : "New board"}
@@ -449,16 +595,17 @@ export function SudokuGame() {
           <div className="mt-5 space-y-4">
             <div className="flex flex-col gap-4">
               {/* <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_12rem]"> */}
-
-              <SudokuAboveBoard
-                game={game}
-                showHint={showHint}
-                selectedCandidates={selectedCandidates}
-                difficultyDetails={difficultyDetails}
-                statusTitle={statusTitle}
-                statusBody={statusBody}
-                onToggleHint={() => setShowHint((current) => !current)}
-              />
+              <div className="hidden sm:block">
+                <SudokuAboveBoard
+                  game={game}
+                  showHint={showHint}
+                  selectedCandidates={selectedCandidates}
+                  difficultyDetails={difficultyDetails}
+                  statusTitle={statusTitle}
+                  statusBody={statusBody}
+                  onToggleHint={() => setShowHint((current) => !current)}
+                />
+              </div>
               {/* <div className="flex flex-col gap-4 sm:flex-row items-center sm:justify-between rounded-3xl border border-base-300/15 bg-white/38 p-4 backdrop-blur-md">
                 <div className="flex items-center gap-3 bg-white/38">
                   <label
@@ -637,51 +784,15 @@ export function SudokuGame() {
         </div>
 
         <aside className="w-full space-y-4 xl:max-w-sm">
-          <div className="rounded-[1.6rem] border border-base-300/15 bg-white/40 p-5">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.3em] text-base-content/45">
-                  Score
-                </p>
-                <p className="display-font mt-2 text-5xl font-semibold text-base-content">
-                  {game.score ?? scorePreview}
-                </p>
-              </div>
-              <Trophy className="size-7 text-primary" />
-            </div>
-
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
-              <div className="rounded-[1.2rem] bg-base-100/70 p-4">
-                <p className="text-xs uppercase tracking-[0.3em] text-base-content/45">
-                  Time
-                </p>
-                <p className="mt-2 text-2xl font-semibold">
-                  {formatSudokuTime(elapsedSeconds)}
-                </p>
-              </div>
-              <div className="rounded-[1.2rem] bg-base-100/70 p-4">
-                <p className="text-xs uppercase tracking-[0.3em] text-base-content/45">
-                  Mistakes
-                </p>
-                <p className="mt-2 text-2xl font-semibold">{game.mistakes}</p>
-              </div>
-              <div className="rounded-[1.2rem] bg-base-100/70 p-4">
-                <p className="text-xs uppercase tracking-[0.3em] text-base-content/45">
-                  Clues
-                </p>
-                <p className="mt-2 text-2xl font-semibold">{game.clueCount}</p>
-              </div>
-              <div className="rounded-[1.2rem] bg-base-100/70 p-4">
-                <p className="text-xs uppercase tracking-[0.3em] text-base-content/45">
-                  Progress
-                </p>
-                <p className="mt-2 text-2xl font-semibold">
-                  {progressPercent}%
-                </p>
-              </div>
-            </div>
+          <div className="hidden sm:block">
+            <SudokuScoreSummary
+              score={game.score ?? scorePreview}
+              elapsedSeconds={elapsedSeconds}
+              mistakes={game.mistakes}
+              clueCount={game.clueCount}
+              progressPercent={progressPercent}
+            />
           </div>
-
           {/* <div className="rounded-[1.6rem] border border-base-300/15 bg-white/40 p-5">
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -734,8 +845,7 @@ export function SudokuGame() {
               </button>
             ) : null}
           </div> */}
-
-          <ScorePanel
+          <LazyScorePanel
             gameSlug="sudoku"
             score={game.score ?? 0}
             details={{

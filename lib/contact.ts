@@ -109,6 +109,7 @@ export async function getAdminContactInbox(
   if (!database) {
     return {
       available: false,
+      filteredCount: 0,
       totalCount: 0,
       unreadCount: 0,
       readCount: 0,
@@ -130,17 +131,20 @@ export async function getAdminContactInbox(
             ["createdAt", -1],
           ] as [string, 1 | -1][]);
 
-  const [messageDocuments, totalCount, unreadCount] = await Promise.all([
-    ContactMessageModel.find(query)
-      .sort(sort)
-      .limit(ADMIN_CONTACT_INBOX_LIMIT)
-      .lean(),
-    ContactMessageModel.countDocuments({}),
-    ContactMessageModel.countDocuments({ isRead: { $ne: true } }),
-  ]);
+  const [messageDocuments, filteredCount, totalCount, unreadCount] =
+    await Promise.all([
+      ContactMessageModel.find(query)
+        .sort(sort)
+        .limit(ADMIN_CONTACT_INBOX_LIMIT)
+        .lean(),
+      ContactMessageModel.countDocuments(query),
+      ContactMessageModel.countDocuments({}),
+      ContactMessageModel.countDocuments({ isRead: { $ne: true } }),
+    ]);
 
   return {
     available: true,
+    filteredCount,
     totalCount,
     unreadCount,
     readCount: Math.max(totalCount - unreadCount, 0),

@@ -85,12 +85,18 @@ export function SiteFooter() {
               ))}
             </div>
           )}
-          <div className="space-y-3 mt-4 text-sm text-neutral-content/75">
-              <p className="inline-flex items-center gap-2 rounded-full border border-white/12 px-3 py-2">
-                <Rss className="size-4" />
-                All Blog Posts
-              </p>
-            </div>
+          <div className="mt-4 space-y-3 text-sm text-neutral-content/75">
+            <Link
+              href="/rss.xml"
+              target='_blank'
+              type="application/rss+xml"
+              aria-label="RSS feed for all blog posts"
+              className="inline-flex items-center gap-2 rounded-full border border-white/12 px-3 py-2 hover:text-neutral-content"
+            >
+              <Rss className="size-4" />
+              All Blog Posts
+            </Link>
+          </div>
         </div>
       </div>
 

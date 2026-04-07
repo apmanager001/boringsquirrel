@@ -82,21 +82,22 @@ export default async function SettingsPage() {
                 Profile settings
               </h2>
             </div>
-            <Image
-              src={session.user.image || "/default-avatar.png"}
-              alt="User avatar"
-              width={48}
-              height={48}
-              className="rounded-full border border-base-300/20 bg-white/50 object-cover"
-            />
+            <Link
+              href={`/profile/${identity.userId}`}
+              className="inline-flex flex-col items-center gap-2 mt-4 text-sm font-medium text-primary hover:text-primary/80"
+            >
+              <Image
+                src={session.user.image || "/default-avatar.png"}
+                alt="User avatar"
+                width={48}
+                height={48}
+                className="rounded-full border border-base-300/20 bg-white/50 object-cover"
+              />
+                <span className="text-xs">View public profile</span>
+            </Link>
+        
           </div>
           <ProfileUsernameForm username={username} displayName={displayName} />
-          <Link
-            href={`/profile/${identity.userId}`}
-            className="inline-flex items-center gap-2 mt-4 text-sm font-medium text-primary hover:text-primary/80"
-          >
-            View public profile
-          </Link>
         </div>
         <div className="card-surface rounded-[1.6rem] p-6">
           <div className="flex items-center gap-3">

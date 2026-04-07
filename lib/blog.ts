@@ -223,7 +223,7 @@ async function getMetricMap(slugs: string[]) {
   );
 }
 
-const getCachedPosts = cache(async (): Promise<BlogPostSummary[]> => {
+const getCachedPostsWithDrafts = cache(async (): Promise<BlogPostSummary[]> => {
   const slugs = getPostSlugsInternal();
   const metricMap = await getMetricMap(slugs);
 
@@ -248,12 +248,20 @@ const getCachedPosts = cache(async (): Promise<BlogPostSummary[]> => {
     };
   });
 
-  return posts
-    .filter((post) => shouldShowDrafts() || !post.draft)
-    .sort(
-      (left, right) =>
-        new Date(right.date).getTime() - new Date(left.date).getTime(),
-    );
+  return posts.sort(
+    (left, right) =>
+      new Date(right.date).getTime() - new Date(left.date).getTime(),
+  );
+});
+
+const getCachedPosts = cache(async (): Promise<BlogPostSummary[]> => {
+  const posts = await getCachedPostsWithDrafts();
+
+  if (shouldShowDrafts()) {
+    return posts;
+  }
+
+  return posts.filter((post) => !post.draft);
 });
 
 export function getBlogSlugs() {
@@ -277,6 +285,10 @@ export function getBlogSlugs() {
 
 export async function getAllBlogPosts() {
   return getCachedPosts();
+}
+
+export async function getAllBlogPostsForAdmin() {
+  return getCachedPostsWithDrafts();
 }
 
 export async function getRecentPosts(limit = 3) {

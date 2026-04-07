@@ -27,7 +27,7 @@ type ScoreboardResponse = {
   message: string | null;
 };
 
-type ScorePanelProps = {
+export type ScorePanelProps = {
   gameSlug: SupportedScoreGameSlug;
   score: number;
   details: GameScoreDetails;
