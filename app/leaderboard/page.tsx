@@ -58,11 +58,10 @@ export default async function LeaderboardPage() {
         <p className="section-kicker">Leaderboard</p>
         <div className="space-y-4">
           <h1 className="display-font text-5xl font-bold leading-[0.96] text-base-content sm:text-6xl">
-            Top verified scores.
+            Leaderboard
           </h1>
           <p className="max-w-3xl text-lg leading-8 text-base-content/80">
-            Every row is a saved best from a verified account. Open a player
-            profile to see their other runs, or jump into a game and try to take
+            Every score is saved from a verified account. Check out your competition, or jump into a game and try to take
             a higher spot.
           </p>
         </div>
@@ -78,7 +77,7 @@ export default async function LeaderboardPage() {
               <div className="max-w-3xl">
                 <p className="section-kicker before:w-5">{game.name}</p>
                 <h2 className="display-font mt-3 text-3xl font-semibold text-base-content">
-                  Verified Games
+                  Leaderboard
                 </h2>
                 <p className="mt-3 text-sm leading-7 text-base-content/78">
                   {game.scoreHook}

@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { CircleUserRound, UserRoundPlus } from "lucide-react";
-import { authClient } from "@/lib/auth-client";
+import { useStableAuthSession } from "./use-stable-auth-session";
 
 type SessionCtaProps = {
   authEnabled: boolean;
 };
 
 function AuthenticatedSessionCta() {
-  const { data: session, isPending } = authClient.useSession();
+  const { session, isPending } = useStableAuthSession();
   const username =
     session?.user && "displayUsername" in session.user
       ? String(session.user.displayUsername || session.user.name || "Account")
@@ -20,7 +20,7 @@ function AuthenticatedSessionCta() {
       <>
         <Link
           href="/register"
-          className="btn btn-ghost hidden rounded-full border border-base-300/25 bg-white/35 sm:inline-flex"
+          className="btn btn-ghost hidden rounded-full border border-base-300/25 bg-white/35 xl:inline-flex"
         >
           <UserRoundPlus className="size-4" />
           Register

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, Spotlight, Gamepad2, Rss } from "lucide-react";
 import { GameCard } from "@/components/game-card";
 import { PostCard } from "@/components/post-card";
+import GameCards from "@/components/games/gameCards";
 import { getPopularPosts, getRecentPosts } from "@/lib/blog";
 import { formatGameScoreDetails } from "@/lib/games/score-formatting";
 import {
@@ -62,6 +63,34 @@ export default async function Home() {
     (section): section is HomeLeaderboardSection => Boolean(section),
   );
 
+
+  const featureCards = [
+    {
+      id: "blog",
+      icon: Rss,
+      iconClassName: "text-primary",
+      title: "Blog",
+      description:
+        "Read about games, tech and everything interesting. Like posts you find interesting.",
+    },
+    {
+      id: "games",
+      icon: Gamepad2,
+      iconClassName: "text-accent",
+      title: "Games",
+      description:
+        "Play games for free, no account required. Play classic games and puzzles.",
+    },
+    {
+      id: "leaderboard",
+      icon: Spotlight,
+      iconClassName: "text-secondary",
+      title: "Leaderboard",
+      description:
+        "Verified accounts can now save best runs and climb the live game leaderboards.",
+    },
+  ];
+
   return (
     <main className="pb-16 sm:pb-24">
       <section className="page-shell grid gap-10 py-14 sm:py-20 lg:grid-cols-[minmax(0,1fr)_30rem] lg:items-center">
@@ -87,8 +116,8 @@ export default async function Home() {
               Read the blog
             </Link>
           </div>
-
-          <div className="grid gap-4 sm:grid-cols-3">
+          <GameCards items={featureCards} />
+          {/* <div className="grid gap-4 sm:grid-cols-3">
             <div className="card-surface rounded-3xl p-5">
               <div className="flex items-center gap-3">
                 <Rss className="size-5 text-primary" />
@@ -98,7 +127,7 @@ export default async function Home() {
               </div>
               <p className="mt-2 text-sm leading-7 text-base-content/78">
                 Read about games, tech and everything interesting. Like posts
-                you find interetsing.
+                you find interesting.
               </p>
             </div>
             <div className="card-surface rounded-3xl p-5">
@@ -125,7 +154,7 @@ export default async function Home() {
                 leaderboards.
               </p>
             </div>
-          </div>
+          </div> */}
         </div>
 
         <div className="relative">

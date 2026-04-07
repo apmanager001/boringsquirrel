@@ -230,17 +230,17 @@ export function RegisterForm({
       <div className="space-y-2">
         <p className="section-kicker before:w-6">Register</p>
         <h2 className="display-font text-3xl font-semibold">
-          Create your player account
+          Create your account
         </h2>
         <p className="text-sm leading-7 text-base-content/75">
-          Usernames are unique, email verification is required, and all new
-          accounts start as non-admin.
+          Use a unique username, email, and password. Display Name is optional.
         </p>
       </div>
 
       {!authEnabled ? (
-        <div className="mt-5 rounded-[1.4rem] bg-warning/15 px-4 py-3 text-sm leading-7 text-warning-content">
-          Authentication is not configured in the current environment yet.
+        <div className="mt-5 rounded-[1.4rem] bg-warning/80 px-4 py-3 text-sm leading-7 text-warning-content">
+          We are having server issues. Please try signing in again later. If the
+          problem persists, contact support.
         </div>
       ) : null}
 
@@ -367,7 +367,7 @@ export function RegisterForm({
             label={
               googleEnabled
                 ? "Start with Google"
-                : "Google sign-in needs env setup"
+                : "Google sign-in disabled"
             }
           />
         </div>

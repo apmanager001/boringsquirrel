@@ -19,6 +19,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useEffect, useEffectEvent, useState, useTransition } from "react";
+import { useStableAuthSession } from "./auth/use-stable-auth-session";
 import { authClient, type AuthSession } from "@/lib/auth-client";
 
 type NavLink = {
@@ -107,7 +108,7 @@ function DockLink({
 }
 
 function AuthenticatedMobileSiteDock(props: MobileSiteDockProps) {
-  const { data: session, isPending } = authClient.useSession();
+  const { session, isPending } = useStableAuthSession();
 
   return (
     <MobileSiteDockFrame
@@ -181,7 +182,6 @@ function MobileSiteDockFrame({
     });
   }
   const identity = session?.user;
-  
 
   return (
     <>
@@ -247,11 +247,10 @@ function MobileSiteDockFrame({
                 })}
                 {identity?.role === "admin" && (
                   <Link
-                    key='admin'
-                    href='/admin'
+                    key="admin"
+                    href="/admin"
                     onClick={() => setDrawerOpen(false)}
-                    className={`flex items-center justify-between rounded-[1.35rem] border px-4 py-3 text-sm font-medium transition border-white/10 bg-white/4 text-neutral-content/82 hover:border-white/16 hover:bg-white/10 hover:text-neutral-content"
-                    }`}
+                    className="flex items-center justify-between rounded-[1.35rem] border border-white/10 bg-white/4 px-4 py-3 text-sm font-medium text-neutral-content/82 transition hover:border-white/16 hover:bg-white/10 hover:text-neutral-content"
                   >
                     <span className="inline-flex items-center gap-3">
                       <ShieldUser className="size-4" />
@@ -261,7 +260,7 @@ function MobileSiteDockFrame({
                       <ExternalLink className="size-4" />
                     </span>
                   </Link>
-                  )}
+                )}
               </div>
 
               <div className="mt-6 rounded-[1.7rem] border border-white/10 bg-white/5 p-4">

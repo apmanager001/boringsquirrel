@@ -1,6 +1,7 @@
 import { KeyRound, MailCheck, ShieldCheck } from "lucide-react";
 import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/auth/login-form";
+import GameCards from "@/components/games/gameCards";
 import { getAuthSession } from "@/lib/auth";
 import {
   hasBetterAuthConfig,
@@ -37,54 +38,49 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       redirect(callbackURL);
     }
 
+    const featureCards = [
+      {
+        id: "Email",
+        icon: KeyRound,
+        iconClassName: "text-primary",
+        title: "Email or username",
+        description:
+          "Sign in with either your Google, email, or username.",
+      },
+      {
+        id: "verify",
+        icon: MailCheck,
+        iconClassName: "text-accent",
+        title: "Verify",
+        description:
+          "Verify your account in settings to save your scores and like blog posts.",
+      },
+      {
+        id: "secure",
+        icon: ShieldCheck,
+        iconClassName: "text-secondary",
+        title: "Secure",
+        description:
+          "We provide full security for all accounts",
+      },
+    ];
+
     return (
       <main className="page-shell py-14 sm:py-20">
-        <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_30rem] lg:items-start">
+        <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_30rem] lg:items-center">
           <div className="space-y-6">
-            <p className="section-kicker">Authentication</p>
+            <p className="section-kicker">Sign In</p>
             <div className="space-y-4">
               <h1 className="display-font text-5xl font-bold leading-[0.96] text-base-content sm:text-6xl">
-                Sign in with credentials now, with Google ready once the env
-                values are present.
+                Sign into your account
               </h1>
               <p className="max-w-3xl text-lg leading-8 text-base-content/80">
-                The account layer now accepts real email or username logins and
-                keeps the verified-email rule in place for likes and saved
-                scores.
+                Sign in with your email or username and password, or use Google for a quicker login.
               </p>
             </div>
-
-            <section className="grid gap-6 md:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-              <div className="card-surface rounded-[1.6rem] p-6">
-                <KeyRound className="size-5 text-primary" />
-                <h2 className="display-font mt-4 text-2xl font-semibold">
-                  Email or username
-                </h2>
-                <p className="mt-3 text-sm leading-7 text-base-content/80">
-                  Sign in with whichever identifier you remember best.
-                </p>
-              </div>
-              <div className="card-surface rounded-[1.6rem] p-6">
-                <MailCheck className="size-5 text-accent" />
-                <h2 className="display-font mt-4 text-2xl font-semibold">
-                  Verified before actions
-                </h2>
-                <p className="mt-3 text-sm leading-7 text-base-content/80">
-                  Verification is still required before social actions and saved
-                  scores unlock.
-                </p>
-              </div>
-              <div className="card-surface rounded-[1.6rem] p-6">
-                <ShieldCheck className="size-5 text-secondary" />
-                <h2 className="display-font mt-4 text-2xl font-semibold">
-                  Manual admin promotion
-                </h2>
-                <p className="mt-3 text-sm leading-7 text-base-content/80">
-                  Your own account can be promoted in Mongo later without
-                  changing the public signup flow.
-                </p>
-              </div>
-            </section>
+            <div className="hidden sm:block">
+              <GameCards items={featureCards} />
+            </div>
           </div>
 
           <LoginForm
@@ -93,6 +89,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             mailEnabled={mailEnabled}
             callbackURL={callbackURL}
           />
+          <div className="block sm:hidden">
+            <GameCards items={featureCards} />
+          </div>
         </section>
       </main>
     );
@@ -102,15 +101,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     <main className="page-shell py-14 sm:py-20">
       <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_30rem] lg:items-start">
         <div className="space-y-6">
-          <p className="section-kicker">Authentication</p>
+          <p className="section-kicker">Sign In</p>
           <div className="space-y-4">
             <h1 className="display-font text-5xl font-bold leading-[0.96] text-base-content sm:text-6xl">
-              The login UI is ready, but auth env values are still missing here.
+              Sign into your account
             </h1>
             <p className="max-w-3xl text-lg leading-8 text-base-content/80">
-              Once Mongo, Better Auth, and SMTP values are present, this page
-              will accept email or username logins and handle verification
-              properly.
+              Possible server issues. Contact support if the problem persists.
             </p>
           </div>
         </div>

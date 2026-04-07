@@ -31,17 +31,17 @@ function GameCards({ items, className }: GameCardsProps) {
         }) => (
           <div
             key={id}
-            className="card-surface grid grid-cols-[auto_1fr] items-start gap-x-2.5 gap-y-1.5 rounded-[1.15rem] p-3 sm:block sm:rounded-[1.6rem] sm:p-6"
+            className="card-surface grid sm:grid-cols-3 items-start rounded-xl sm:block sm:rounded-3xl p-5"
           >
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-3">
               <Icon
-                className={`size-3.5 shrink-0 sm:size-5 ${iconClassName}`}
+                className={`size-3 sm:size-5 ${iconClassName}`}
               />
-              <h2 className="display-font text-base font-semibold leading-snug sm:text-2xl">
+              <h2 className="text-sm font-semibold uppercase text-base-content/60">
                 {title}
               </h2>
             </div>
-            <p className="col-span-2 text-[11px] leading-5 text-base-content/80 sm:mt-3 sm:text-sm sm:leading-7">
+            <p className="mt-2 text-sm leading-7 text-base-content/78">
               {description}
             </p>
           </div>
