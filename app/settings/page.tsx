@@ -131,19 +131,20 @@ export default async function SettingsPage() {
           playstationHandle={socialLinks.playstationHandle}
           twitchHandle={socialLinks.twitchHandle}
         />
-        <div className="card-surface rounded-[1.8rem] p-6">
-          <div className="flex items-center gap-3">
-            <Heart className="size-5 text-accent" />
-            <h2 className="display-font text-2xl font-semibold">Blog likes</h2>
+        {likedPostCount > 0 && (
+          <div className="card-surface rounded-[1.8rem] p-6">
+            <div className="flex items-center gap-3">
+              <Heart className="size-5 text-accent" />
+              <h2 className="display-font text-2xl font-semibold">Blog likes</h2>
+            </div>
+            <p className="display-font mt-4 text-5xl font-semibold text-base-content">
+              {likedPostCount}
+            </p>
+            <p className="mt-3 text-sm leading-7 text-base-content/78">
+            Thank you for liking {likedPostCount === 1 ? "a post" : `${likedPostCount} posts`}! Your support helps us keep the content coming.
+            </p>
           </div>
-          <p className="display-font mt-4 text-5xl font-semibold text-base-content">
-            {likedPostCount}
-          </p>
-          <p className="mt-3 text-sm leading-7 text-base-content/78">
-            Verified reactions are now counted once per account and feed the
-            post popularity views across the site.
-          </p>
-        </div>
+        )}
       </section>
     </main>
   );

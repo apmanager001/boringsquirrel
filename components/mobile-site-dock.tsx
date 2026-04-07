@@ -181,7 +181,7 @@ function MobileSiteDockFrame({
     });
   }
   const identity = session?.user;
-  console.log(identity)
+  
 
   return (
     <>

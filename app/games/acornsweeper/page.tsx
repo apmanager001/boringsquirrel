@@ -1,8 +1,35 @@
 import { Nut, Squirrel, Trophy } from "lucide-react";
+import GameCards from "@/components/games/gameCards";
 import { AcornSweeperGameShell } from "@/components/games/acornsweeper-game-shell";
 import { buildMetadata, getGameBySlug } from "@/lib/site";
 
 const game = getGameBySlug("acornsweeper");
+const featureCards = [
+  {
+    id: "hidden-acorns",
+    icon: Nut,
+    iconClassName: "text-primary",
+    title: "Hidden acorns",
+    description:
+      "Every board hides a fresh spread of acorns. The first reveal is protected so you can open a safe pocket and start reading the numbers immediately.",
+  },
+  {
+    id: "squirrel-flags",
+    icon: Squirrel,
+    iconClassName: "text-accent",
+    title: "Squirrel flags",
+    description:
+      "Right-click plants a squirrel on hidden danger, and touch users can flip into flag mode before tapping the board.",
+  },
+  {
+    id: "clear-for-score",
+    icon: Trophy,
+    iconClassName: "text-secondary",
+    title: "Clear-for-score",
+    description:
+      "Each difficulty has its own base score and pace target. Finish faster to keep more of that score intact for the leaderboard.",
+  },
+];
 
 export const metadata = buildMetadata({
   title: "AcornSweeper",
@@ -19,7 +46,7 @@ export default function AcornSweeperPage() {
 
   return (
     <main className="page-shell py-14 sm:py-20">
-      <section className="grid gap-8 xl:items-start">
+      <section className="grid sm:gap-8 xl:items-start">
         <div className="space-y-8">
           <div className="space-y-5">
             <div className="flex items-center gap-4">
@@ -39,41 +66,9 @@ export default function AcornSweeperPage() {
             </div>
           </div>
 
-          <section className="grid gap-6 sm:grid-cols-3">
-            <div className="card-surface rounded-[1.6rem] p-6">
-              <Nut className="size-5 text-primary" />
-              <h2 className="display-font mt-4 text-2xl font-semibold">
-                Hidden acorns
-              </h2>
-              <p className="mt-3 text-sm leading-7 text-base-content/80">
-                Every board hides a fresh spread of acorns. The first reveal is
-                protected so you can open a safe pocket and start reading the
-                numbers immediately.
-              </p>
-            </div>
-            <div className="card-surface rounded-[1.6rem] p-6">
-              <Squirrel className="size-5 text-accent" />
-              <h2 className="display-font mt-4 text-2xl font-semibold">
-                Squirrel flags
-              </h2>
-              <p className="mt-3 text-sm leading-7 text-base-content/80">
-                Right-click plants a squirrel on hidden danger, and touch users
-                can flip into flag mode before tapping the board.
-              </p>
-            </div>
-            <div className="card-surface rounded-[1.6rem] p-6">
-              <Trophy className="size-5 text-secondary" />
-              <h2 className="display-font mt-4 text-2xl font-semibold">
-                Clear-for-score
-              </h2>
-              <p className="mt-3 text-sm leading-7 text-base-content/80">
-                Each difficulty has its own base score and pace target. Finish
-                faster to keep more of that score intact for the leaderboard.
-              </p>
-            </div>
-          </section>
+          <GameCards items={featureCards} />
 
-          <section className="card-surface rounded-[1.8rem] p-6 sm:p-7">
+          <section className="hidden sm:block card-surface rounded-[1.8rem] p-6 sm:p-7">
             <p className="section-kicker before:w-5">How it scores</p>
             <div className="mt-4 space-y-3 text-sm leading-7 text-base-content/78">
               <p>{game.scoreHook}</p>

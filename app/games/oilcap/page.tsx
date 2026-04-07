@@ -1,8 +1,35 @@
 import { Flame, Route, Trophy } from "lucide-react";
+import GameCards from "@/components/games/gameCards";
 import { OilcapGameShell } from "@/components/games/oilcap-game-shell";
 import { buildMetadata, getGameBySlug } from "@/lib/site";
 
 const game = getGameBySlug("oilcap");
+const featureCards = [
+  {
+    id: "queue-routing",
+    icon: Route,
+    iconClassName: "text-primary",
+    title: "Queue-based routing",
+    description:
+      "Pick from three upcoming pieces, then commit that tile to the board. Every placement changes the next decision.",
+  },
+  {
+    id: "efficiency-scoring",
+    icon: Trophy,
+    iconClassName: "text-accent",
+    title: "Efficiency scoring",
+    description:
+      "Reachable pipes and matched connections add points. Isolated junk and leaks strip the run back down.",
+  },
+  {
+    id: "tight-move-budget",
+    icon: Flame,
+    iconClassName: "text-secondary",
+    title: "Tight move budget",
+    description:
+      "You only get twelve placements per delivery. Clean routes preserve enough budget for a bonus finish.",
+  },
+];
 
 export const metadata = buildMetadata({
   title: "Oilcap",
@@ -20,7 +47,7 @@ export default function OilcapPage() {
   return (
     <main className="page-shell py-6 md:py-14 sm:py-20 ">
       <section className="grid gap-8 xl:items-start">
-        <div className="space-y-8">
+        <div className="min-w-0 space-y-8">
           <div className="space-y-5">
             <p className="section-kicker">{game.eyebrow}</p>
             <div className="space-y-4">
@@ -38,38 +65,7 @@ export default function OilcapPage() {
             </div>
           </div>
 
-          <section className="grid gap-6 md:grid-cols-3 2xl:grid-cols-3">
-            <div className="card-surface rounded-[1.6rem] p-6">
-              <Route className="size-5 text-primary" />
-              <h2 className="display-font mt-4 text-2xl font-semibold">
-                Queue-based routing
-              </h2>
-              <p className="mt-3 text-sm leading-7 text-base-content/80">
-                Pick from three upcoming pieces, then commit that tile to the
-                board. Every placement changes the next decision.
-              </p>
-            </div>
-            <div className="card-surface rounded-[1.6rem] p-6">
-              <Trophy className="size-5 text-accent" />
-              <h2 className="display-font mt-4 text-2xl font-semibold">
-                Efficiency scoring
-              </h2>
-              <p className="mt-3 text-sm leading-7 text-base-content/80">
-                Reachable pipes and matched connections add points. Isolated
-                junk and leaks strip the run back down.
-              </p>
-            </div>
-            <div className="card-surface rounded-[1.6rem] p-6">
-              <Flame className="size-5 text-secondary" />
-              <h2 className="display-font mt-4 text-2xl font-semibold">
-                Tight move budget
-              </h2>
-              <p className="mt-3 text-sm leading-7 text-base-content/80">
-                You only get twelve placements per delivery. Clean routes
-                preserve enough budget for a bonus finish.
-              </p>
-            </div>
-          </section>
+          <GameCards items={featureCards} />
 
           <section className="card-surface rounded-[1.8rem] p-6 sm:p-7">
             <p className="section-kicker before:w-5">How it scores</p>
@@ -84,7 +80,9 @@ export default function OilcapPage() {
           </section>
         </div>
 
-        <OilcapGameShell />
+        <div className="min-w-0">
+          <OilcapGameShell />
+        </div>
       </section>
     </main>
   );

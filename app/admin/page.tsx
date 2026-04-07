@@ -7,6 +7,7 @@ import {
   Mail,
   PenLine,
   ShieldCheck,
+  Users,
 } from "lucide-react";
 import { redirect } from "next/navigation";
 import {
@@ -15,7 +16,11 @@ import {
 } from "@/app/admin/actions";
 import { ContactMessageDeleteButton } from "@/components/admin/contact-message-delete-button";
 import { ContactMessageReviewButton } from "@/components/admin/contact-message-review-button";
-import { getAuthSession, getSessionIdentityFromUnknown } from "@/lib/auth";
+import {
+  getAuthSession,
+  getRegisteredUserCount,
+  getSessionIdentityFromUnknown,
+} from "@/lib/auth";
 import { getAllBlogPostsForAdmin, type BlogPostSummary } from "@/lib/blog";
 import {
   ADMIN_CONTACT_INBOX_LIMIT,
@@ -66,7 +71,6 @@ type AdminPanelView = "blog" | "messages";
 type AdminSummaryCardProps = {
   title: string;
   value: string;
-  description: string;
   icon: LucideIcon;
   iconClassName: string;
 };
@@ -119,7 +123,6 @@ function formatAdminNumber(value: number) {
 function AdminSummaryCard({
   title,
   value,
-  description,
   icon: Icon,
   iconClassName,
 }: AdminSummaryCardProps) {
@@ -135,9 +138,6 @@ function AdminSummaryCard({
       </div>
       <p className="display-font mt-3 text-3xl font-semibold text-base-content sm:mt-4 sm:text-4xl">
         {value}
-      </p>
-      <p className="mt-3 hidden text-sm leading-7 text-base-content/75 sm:block">
-        {description}
       </p>
     </div>
   );
@@ -274,19 +274,26 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const filter = normalizeAdminContactFilter(
     typeof params.filter === "string" ? params.filter : undefined,
   );
-  const [inbox, blogPosts] = await Promise.all([
+  const [resolvedInbox, resolvedBlogPosts, registeredUserCount] =
+    await Promise.all([
     getAdminContactInbox(filter),
     getAllBlogPostsForAdmin(),
-  ]);
+    getRegisteredUserCount(),
+    ]);
 
-  const livePosts = blogPosts.filter((post) => !post.draft);
-  const draftPosts = blogPosts.filter((post) => post.draft);
-  const visibleMessageCount = inbox.messages.length;
-  const showingAllFetchedMessages = visibleMessageCount >= inbox.filteredCount;
+  const livePosts = resolvedBlogPosts.filter((post) => !post.draft);
+  const draftPosts = resolvedBlogPosts.filter((post) => post.draft);
+  const visibleMessageCount = resolvedInbox.messages.length;
+  const showingAllFetchedMessages =
+    visibleMessageCount >= resolvedInbox.filteredCount;
   const livePostShare =
-    blogPosts.length === 0 ? 0 : (livePosts.length / blogPosts.length) * 100;
+    resolvedBlogPosts.length === 0
+      ? 0
+      : (livePosts.length / resolvedBlogPosts.length) * 100;
   const draftPostShare =
-    blogPosts.length === 0 ? 0 : (draftPosts.length / blogPosts.length) * 100;
+    resolvedBlogPosts.length === 0
+      ? 0
+      : (draftPosts.length / resolvedBlogPosts.length) * 100;
   const messageViewLabel = getAdminMessageViewLabel(filter);
 
   return (
@@ -304,45 +311,42 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         </div>
       </section>
 
-      <section className="mt-10 grid grid-cols-2 gap-3 min-[560px]:grid-cols-3 sm:gap-4 xl:grid-cols-5">
+      <section className="mt-10 grid grid-cols-2 gap-3 min-[560px]:grid-cols-3 sm:gap-4 xl:grid-cols-6">
         <AdminSummaryCard
           title="Total posts"
-          value={formatAdminNumber(blogPosts.length)}
-          description="Every MDX blog entry currently indexed in the app."
+          value={formatAdminNumber(resolvedBlogPosts.length)}
           icon={FileText}
           iconClassName="text-base-content"
         />
         <AdminSummaryCard
           title="Live posts"
           value={formatAdminNumber(livePosts.length)}
-          description="Public posts that ship to production routes and feeds."
           icon={Globe}
           iconClassName="text-success"
         />
         <AdminSummaryCard
           title="Draft posts"
           value={formatAdminNumber(draftPosts.length)}
-          description="Private posts still waiting for the draft flag to be removed."
           icon={PenLine}
           iconClassName="text-warning"
         />
         <AdminSummaryCard
           title="Inbox total"
-          value={formatAdminNumber(inbox.totalCount)}
-          description={
-            inbox.available
-              ? "Stored contact submissions currently in MongoDB."
-              : "Inbox data is unavailable in this environment."
-          }
+          value={formatAdminNumber(resolvedInbox.totalCount)}
           icon={Inbox}
           iconClassName="text-primary"
         />
         <AdminSummaryCard
           title="Unread"
-          value={formatAdminNumber(inbox.unreadCount)}
-          description="Messages that still have not been reviewed."
+          value={formatAdminNumber(resolvedInbox.unreadCount)}
           icon={Mail}
           iconClassName="text-secondary"
+        />
+        <AdminSummaryCard
+          title="Users"
+          value={formatAdminNumber(registeredUserCount)}
+          icon={Users}
+          iconClassName="text-info"
         />
       </section>
 
@@ -462,13 +466,13 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               </div>
 
               <p className="mt-4 text-sm leading-7 text-base-content/75">
-                {blogPosts.length === 0
+                {resolvedBlogPosts.length === 0
                   ? "No blog posts are indexed yet. Add an MDX post under app/blog to populate this view."
-                  : `${formatAdminNumber(blogPosts.length)} posts are currently indexed. Each row links to the public blog URL; draft rows still stay hidden from production visitors until published.`}
+                  : `${formatAdminNumber(resolvedBlogPosts.length)} posts are currently indexed. Each row links to the public blog URL; draft rows still stay hidden from production visitors until published.`}
               </p>
 
               <div className="mt-6">
-                <BlogInventoryList posts={blogPosts} />
+                <BlogInventoryList posts={resolvedBlogPosts} />
               </div>
             </div>
           ) : (
@@ -501,20 +505,20 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                 </div>
 
                 <p className="mt-4 text-sm leading-7 text-base-content/75">
-                  {!inbox.available
+                  {!resolvedInbox.available
                     ? "Contact inbox data is unavailable because the database connection is not ready in this environment."
                     : showingAllFetchedMessages
-                      ? `Showing all ${formatAdminNumber(inbox.filteredCount)} ${inbox.filteredCount === 1 ? "message" : "messages"} in the ${messageViewLabel}.`
-                      : `Showing the latest ${formatAdminNumber(visibleMessageCount)} of ${formatAdminNumber(inbox.filteredCount)} ${inbox.filteredCount === 1 ? "message" : "messages"} in the ${messageViewLabel}.`}
+                      ? `Showing all ${formatAdminNumber(resolvedInbox.filteredCount)} ${resolvedInbox.filteredCount === 1 ? "message" : "messages"} in the ${messageViewLabel}.`
+                      : `Showing the latest ${formatAdminNumber(visibleMessageCount)} of ${formatAdminNumber(resolvedInbox.filteredCount)} ${resolvedInbox.filteredCount === 1 ? "message" : "messages"} in the ${messageViewLabel}.`}
                 </p>
               </div>
 
-              {!inbox.available ? (
+              {!resolvedInbox.available ? (
                 <div className="card-surface rounded-4xl p-6 text-sm leading-7 text-base-content/78">
                   Contact inbox data is unavailable because the database
                   connection is not ready in this environment.
                 </div>
-              ) : inbox.messages.length === 0 ? (
+              ) : resolvedInbox.messages.length === 0 ? (
                 <div className="card-surface rounded-4xl p-6 text-sm leading-7 text-base-content/78">
                   {filter === "unread"
                     ? "No unread contact messages are waiting for review."
@@ -524,7 +528,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                 </div>
               ) : (
                 <div className="grid gap-4">
-                  {inbox.messages.map((message) => (
+                  {resolvedInbox.messages.map((message) => (
                     <article
                       key={message.id}
                       className={`card-surface rounded-4xl border p-6 ${
@@ -612,14 +616,14 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                 </div>
               )}
 
-              {inbox.available &&
-              inbox.filteredCount > ADMIN_CONTACT_INBOX_LIMIT ? (
+              {resolvedInbox.available &&
+              resolvedInbox.filteredCount > ADMIN_CONTACT_INBOX_LIMIT ? (
                 <div className="rounded-3xl border border-base-300/12 bg-white/45 px-5 py-4 text-sm leading-7 text-base-content/75">
                   The {messageViewLabel} currently shows the latest{" "}
                   {ADMIN_CONTACT_INBOX_LIMIT} of{" "}
-                  {formatAdminNumber(inbox.filteredCount)} messages. If you want
-                  pagination, archive states, or search next, that can slot into
-                  this screen cleanly.
+                  {formatAdminNumber(resolvedInbox.filteredCount)} messages. If
+                  you want pagination, archive states, or search next, that can
+                  slot into this screen cleanly.
                 </div>
               ) : null}
             </>

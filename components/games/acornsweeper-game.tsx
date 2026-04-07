@@ -1,17 +1,25 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from "react";
 import {
   Eye,
   Info,
   Nut,
   RefreshCcw,
   Squirrel,
-  Trophy,
   TriangleAlert,
+  Ruler,
+  Menu,
 } from "lucide-react";
 import { ScorePanel } from "@/components/games/score-panel";
 import { AcornSweeperAboveBoard } from "@/components/games/acornsweeper-above-board";
+import { useGameInfoDrawer } from "@/components/games/game-info-drawer";
 import {
   armAcornSweeperBoard,
   calculateAcornSweeperScore,
@@ -28,6 +36,10 @@ import {
   type AcornSweeperBoard,
   type AcornSweeperDifficulty,
 } from "@/lib/games/acornsweeper";
+import { getGameBySlug } from "@/lib/site";
+import GameScores from "./gameScores";
+
+const scoreHook = getGameBySlug("acornsweeper")?.scoreHook;
 
 type AcornSweeperGameState = {
   id: number;
@@ -104,6 +116,7 @@ export function AcornSweeperGame() {
     createAcornSweeperGameState("medium"),
   );
   const [isPending, startTransition] = useTransition();
+  const { isOpen, openDrawer } = useGameInfoDrawer();
 
   useEffect(() => {
     if (game.status !== "playing") {
@@ -157,12 +170,12 @@ export function AcornSweeperGame() {
     });
   }
 
-  function toggleFlagMode() {
+  const toggleFlagMode = useCallback(() => {
     setGame((current) => ({
       ...current,
       flagMode: !current.flagMode,
     }));
-  }
+  }, []);
 
   function toggleFlag(row: number, col: number) {
     setGame((current) => {
@@ -266,17 +279,99 @@ export function AcornSweeperGame() {
         : game.flagMode
           ? "Primary taps place squirrel flags while flag mode is on. Right-click still works any time."
           : "Reveal open space, read the numbers, and use squirrel flags to mark suspected acorns before you dig any deeper.";
+  const scoreStats = useMemo(
+    () => [
+      {
+        label: "Time",
+        value: formatAcornSweeperTime(elapsedSeconds),
+      },
+      {
+        label: "Squirrels",
+        value: flagCount,
+      },
+      {
+        label: "Acorns",
+        value: difficultyDetails.acornCount,
+      },
+      {
+        label: "Progress",
+        value: `${progressPercent}%`,
+      },
+    ],
+    [difficultyDetails.acornCount, elapsedSeconds, flagCount, progressPercent],
+  );
+  const drawerContent = useMemo(
+    () => (
+      <div className="space-y-4">
+        <GameScores
+          score={game.score ?? scorePreview}
+          stats={scoreStats}
+          compact
+        />
+        <AcornSweeperAboveBoard
+          game={game}
+          difficultyDetails={difficultyDetails}
+          statusTitle={statusTitle}
+          statusBody={statusBody}
+          flagCount={flagCount}
+          onToggleFlagMode={toggleFlagMode}
+        />
+      </div>
+    ),
+    [
+      difficultyDetails,
+      flagCount,
+      game,
+      scorePreview,
+      scoreStats,
+      statusBody,
+      statusTitle,
+      toggleFlagMode,
+    ],
+  );
+  const openInfoDrawer = useCallback(() => {
+    openDrawer({
+      title: "Acorn Sweeper info",
+      content: drawerContent,
+    });
+  }, [drawerContent, openDrawer]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    openInfoDrawer();
+  }, [isOpen, openInfoDrawer]);
 
   return (
     <div className="card-surface rounded-4xl p-4 sm:p-6">
       <div className="flex flex-col gap-6 xl:flex-row">
         <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="section-kicker before:w-6">Ready to Play</p>
-              <h2 className="display-font text-3xl font-semibold">
-                Clear the glade
-              </h2>
+            <div className="flex items-start justify-between gap-4 sm:block">
+              <div>
+                <p className="section-kicker before:w-6">Ready to Play</p>
+                <h2 className="display-font text-3xl font-semibold">
+                  Clear the glade
+                </h2>
+              </div>
+              <div className="flex items-center gap-3 sm:hidden">
+                <div
+                  className="tooltip tooltip-left text-primary"
+                  data-tip={scoreHook}
+                >
+                  <Ruler className="size-4" />
+                </div>
+                <button
+                  type="button"
+                  onClick={openInfoDrawer}
+                  className="btn btn-ghost btn-circle"
+                  aria-label="Open Acorn Sweeper information"
+                >
+                  <Menu className="size-5" />
+                </button>
+              </div>
             </div>
 
             <div className="flex flex-wrap gap-3">
@@ -289,7 +384,7 @@ export function AcornSweeperGame() {
                       key={difficulty}
                       type="button"
                       onClick={() => resetGame(difficulty)}
-                      className={`btn rounded-full ${
+                      className={`btn rounded-full btn-sm sm:btn-md ${
                         active
                           ? "btn-primary"
                           : "border border-base-300/20 bg-white/35 text-base-content hover:bg-white/55"
@@ -303,7 +398,7 @@ export function AcornSweeperGame() {
               <button
                 type="button"
                 onClick={() => resetGame()}
-                className="btn btn-secondary rounded-full"
+                className="btn-sm sm:btn-md btn btn-secondary rounded-full"
               >
                 <RefreshCcw className="size-4" />
                 {isPending ? "Scattering..." : "New field"}
@@ -312,14 +407,16 @@ export function AcornSweeperGame() {
           </div>
 
           <div className="mt-5 space-y-4">
-            <AcornSweeperAboveBoard
-              game={game}
-              difficultyDetails={difficultyDetails}
-              statusTitle={statusTitle}
-              statusBody={statusBody}
-              flagCount={flagCount}
-              onToggleFlagMode={toggleFlagMode}
-            />
+            <div className="hidden sm:block">
+              <AcornSweeperAboveBoard
+                game={game}
+                difficultyDetails={difficultyDetails}
+                statusTitle={statusTitle}
+                statusBody={statusBody}
+                flagCount={flagCount}
+                onToggleFlagMode={toggleFlagMode}
+              />
+            </div>
 
             <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_12rem]">
               <div className="rounded-[1.75rem] sm:border border-base-300/15 bg-base-100/55 sm:p-4">
@@ -402,7 +499,7 @@ export function AcornSweeperGame() {
               </div>
 
               <div className="rounded-3xl border border-base-300/15 bg-white/38 p-4">
-                <div className="grid gap-2">
+                <div className="grid grid-cols-3 sm:grid-cols-1 gap-2">
                   <button
                     type="button"
                     onClick={() =>
@@ -439,7 +536,7 @@ export function AcornSweeperGame() {
                   </button>
 
                   <div
-                    className="btn h-12 rounded-2xl border border-base-300/20 bg-base-100/75 hover:bg-base-100 tooltip tooltip-top md:tooltip-left"
+                    className="btn h-12 rounded-2xl border border-base-300/20 bg-base-100/75 hover:bg-base-100 tooltip tooltip-left sm:tooltip-top md:tooltip-left"
                     data-tip="Right-click any hidden square to place or remove a squirrel. On touch screens, switch to Flag mode before tapping."
                   >
                     <Info className="text-info" />
@@ -447,16 +544,16 @@ export function AcornSweeperGame() {
                 </div>
 
                 <div className="mt-4 rounded-[1.2rem] bg-base-100/75 p-4 text-sm leading-7 text-base-content/74">
-                  <div className="">
-                    <Nut className="size-4 text-secondary" />
+                  <div className="flex items-center gap-2 md:block">
+                    <Nut className="size-4 min-w-10 text-secondary" />
                     Hidden acorns end the run.
                   </div>
-                  <div className="mt-2">
-                    <Squirrel className="size-4 text-accent" />
+                  <div className="mt-2 flex items-center gap-2 md:block">
+                    <Squirrel className="size-4 min-w-10 text-accent" />
                     Squirrels mark danger without opening the square.
                   </div>
-                  <div className="mt-2">
-                    <TriangleAlert className="size-4 text-primary" />
+                  <div className="mt-2 flex items-center gap-2 md:block">
+                    <TriangleAlert className="size-4 min-w-10 text-primary" />
                     Clear every safe square to bank the score.
                   </div>
                 </div>
@@ -466,51 +563,8 @@ export function AcornSweeperGame() {
         </div>
 
         <aside className="w-full space-y-4 xl:max-w-sm">
-          <div className="rounded-[1.6rem] border border-base-300/15 bg-white/40 p-5">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.3em] text-base-content/45">
-                  Score
-                </p>
-                <p className="display-font mt-2 text-5xl font-semibold text-base-content">
-                  {game.score ?? scorePreview}
-                </p>
-              </div>
-              <Trophy className="size-7 text-primary" />
-            </div>
-
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
-              <div className="rounded-[1.2rem] bg-base-100/70 p-4">
-                <p className="text-xs uppercase tracking-[0.3em] text-base-content/45">
-                  Time
-                </p>
-                <p className="mt-2 text-2xl font-semibold">
-                  {formatAcornSweeperTime(elapsedSeconds)}
-                </p>
-              </div>
-              <div className="rounded-[1.2rem] bg-base-100/70 p-4">
-                <p className="text-xs uppercase tracking-[0.3em] text-base-content/45">
-                  Squirrels
-                </p>
-                <p className="mt-2 text-2xl font-semibold">{flagCount}</p>
-              </div>
-              <div className="rounded-[1.2rem] bg-base-100/70 p-4">
-                <p className="text-xs uppercase tracking-[0.3em] text-base-content/45">
-                  Acorns
-                </p>
-                <p className="mt-2 text-2xl font-semibold">
-                  {difficultyDetails.acornCount}
-                </p>
-              </div>
-              <div className="rounded-[1.2rem] bg-base-100/70 p-4">
-                <p className="text-xs uppercase tracking-[0.3em] text-base-content/45">
-                  Progress
-                </p>
-                <p className="mt-2 text-2xl font-semibold">
-                  {progressPercent}%
-                </p>
-              </div>
-            </div>
+          <div className="hidden sm:block">
+            <GameScores score={game.score ?? scorePreview} stats={scoreStats} />
           </div>
 
           <ScorePanel

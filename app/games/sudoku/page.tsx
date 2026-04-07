@@ -1,8 +1,35 @@
 import { BrainCircuit, Keyboard, Trophy } from "lucide-react";
+import GameCards from "@/components/games/gameCards";
 import { SudokuGameShell } from "@/components/games/sudoku-game-shell";
 import { buildMetadata, getGameBySlug } from "@/lib/site";
 
 const game = getGameBySlug("sudoku");
+const featureCards = [
+  {
+    id: "generated-boards",
+    icon: BrainCircuit,
+    iconClassName: "text-primary",
+    title: "Generated boards",
+    description:
+      "Easy, medium, and hard each generate from a fresh solved grid and then remove clues while preserving a unique answer.",
+  },
+  {
+    id: "keyboard-mobile-input",
+    icon: Keyboard,
+    iconClassName: "text-accent",
+    title: "Keyboard and mobile input",
+    description:
+      "Arrow keys, number keys, and pencil mode are wired in, while the on-screen pad keeps the board usable on phones.",
+  },
+  {
+    id: "solve-for-score",
+    icon: Trophy,
+    iconClassName: "text-secondary",
+    title: "Solve-for-score",
+    description:
+      "Faster finishes and fewer mistakes keep more of the score intact so verified accounts can bank better runs on the leaderboard.",
+  },
+];
 
 export const metadata = buildMetadata({
   title: "Sudoku",
@@ -41,44 +68,7 @@ export default function SudokuPage() {
             </div>
           </div>
 
-          <section className="grid gap-2.5 sm:gap-6 sm:grid-cols-3">
-            <div className="card-surface grid grid-cols-[auto_1fr] items-start gap-x-2.5 gap-y-1.5 rounded-[1.15rem] p-3 sm:block sm:rounded-[1.6rem] sm:p-6">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <BrainCircuit className="size-3.5 shrink-0 text-primary sm:size-5" />
-                <h2 className="display-font text-base font-semibold leading-snug sm:text-2xl">
-                  Generated boards
-                </h2>
-              </div>
-              <p className="col-span-2 text-[11px] leading-5 text-base-content/80 sm:mt-3 sm:text-sm sm:leading-7">
-                Easy, medium, and hard each generate from a fresh solved grid
-                and then remove clues while preserving a unique answer.
-              </p>
-            </div>
-            <div className="card-surface grid grid-cols-[auto_1fr] items-start gap-x-2.5 gap-y-1.5 rounded-[1.15rem] p-3 sm:block sm:rounded-[1.6rem] sm:p-6">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <Keyboard className="size-3.5 shrink-0 text-accent sm:size-5" />
-                <h2 className="display-font text-base font-semibold leading-snug sm:text-2xl">
-                  Keyboard and mobile input
-                </h2>
-              </div>
-              <p className="col-span-2 text-[11px] leading-5 text-base-content/80 sm:mt-3 sm:text-sm sm:leading-7">
-                Arrow keys, number keys, and pencil mode are wired in, while the
-                on-screen pad keeps the board usable on phones.
-              </p>
-            </div>
-            <div className="card-surface grid grid-cols-[auto_1fr] items-start gap-x-2.5 gap-y-1.5 rounded-[1.15rem] p-3 sm:block sm:rounded-[1.6rem] sm:p-6">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <Trophy className="size-3.5 shrink-0 text-secondary sm:size-5" />
-                <h2 className="display-font text-base font-semibold leading-snug sm:mt-auto sm:text-2xl">
-                  Solve-for-score
-                </h2>
-              </div>
-              <p className="col-span-2 text-[11px] leading-5 text-base-content/80 sm:mt-3 sm:text-sm sm:leading-7">
-                Faster finishes and fewer mistakes keep more of the score intact
-                so verified accounts can bank better runs on the leaderboard.
-              </p>
-            </div>
-          </section>
+          <GameCards items={featureCards} />
 
           <section className="hidden sm:block card-surface rounded-[1.8rem] sm:p-7">
             <p className="section-kicker before:w-5">How it scores</p>

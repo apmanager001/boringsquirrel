@@ -182,3 +182,19 @@ export async function getAuthSession() {
 
   return getAuthSessionFromHeaders(await headers());
 }
+
+export async function getRegisteredUserCount() {
+  if (!hasBetterAuthConfig()) {
+    return 0;
+  }
+
+  await connectMongoClient();
+
+  const database = getMongoDatabase();
+
+  if (!database) {
+    return 0;
+  }
+
+  return database.collection("user").countDocuments({});
+}

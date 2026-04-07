@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useCallback,
   createContext,
   useContext,
   useEffect,
@@ -51,20 +52,23 @@ export function GameInfoDrawerProvider({
     useState<DrawerState>(initialDrawerState);
   const isDrawerOpen = drawerState.isOpen && drawerState.pathname === pathname;
 
-  function closeDrawer() {
+  const closeDrawer = useCallback(() => {
     setDrawerState((current) =>
       current.isOpen ? { ...current, isOpen: false } : current,
     );
-  }
+  }, []);
 
-  function openDrawer(payload: GameInfoDrawerPayload) {
-    setDrawerState({
-      isOpen: true,
-      pathname,
-      title: payload.title ?? "Game info",
-      content: payload.content,
-    });
-  }
+  const openDrawer = useCallback(
+    (payload: GameInfoDrawerPayload) => {
+      setDrawerState({
+        isOpen: true,
+        pathname,
+        title: payload.title ?? "Game info",
+        content: payload.content,
+      });
+    },
+    [pathname],
+  );
 
   useEffect(() => {
     if (!isDrawerOpen) {
