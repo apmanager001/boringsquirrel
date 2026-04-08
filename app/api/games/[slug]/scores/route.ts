@@ -4,6 +4,7 @@ import {
   getAuthSessionFromHeaders,
   getSessionIdentityFromUnknown,
 } from "@/lib/auth";
+import { CLASSIC_SCORE_KEY, normalizeScoreKey } from "@/lib/games/daily";
 import {
   getGameLeaderboard,
   isSupportedScoreGame,
@@ -19,6 +20,7 @@ type FeatureAuthState = "disabled" | "guest" | "unverified" | "verified";
 
 const scoreSubmissionSchema = z.object({
   score: z.number().int().min(0).max(999999),
+  scoreKey: z.string().trim().max(32).optional(),
   details: z
     .record(
       z.string(),
@@ -85,9 +87,27 @@ export async function GET(request: Request, { params }: RouteContext) {
   }
 
   const { authState, identity } = await getFeatureAccess(request.headers);
-  const limitParam = new URL(request.url).searchParams.get("limit");
+  const searchParams = new URL(request.url).searchParams;
+  const limitParam = searchParams.get("limit");
+  const scoreKey = normalizeScoreKey(searchParams.get("scoreKey"));
+
+  if (!scoreKey) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "Invalid score scope.",
+      },
+      { status: 400 },
+    );
+  }
+
   const limit = limitParam ? Number(limitParam) : 8;
-  const scoreboard = await getGameLeaderboard(slug, limit, identity?.userId);
+  const scoreboard = await getGameLeaderboard(
+    slug,
+    limit,
+    identity?.userId,
+    scoreKey,
+  );
 
   return NextResponse.json({
     ok: true,
@@ -138,8 +158,23 @@ export async function POST(request: Request, { params }: RouteContext) {
     );
   }
 
+  const scoreKey = normalizeScoreKey(
+    parsedBody.data.scoreKey ?? CLASSIC_SCORE_KEY,
+  );
+
+  if (!scoreKey) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "Invalid score scope.",
+      },
+      { status: 400 },
+    );
+  }
+
   const saveResult = await saveGameScore({
     gameSlug: slug,
+    scoreKey,
     userId: identity.userId,
     username: identity.username,
     displayName: identity.displayName,
@@ -154,11 +189,17 @@ export async function POST(request: Request, { params }: RouteContext) {
     );
   }
 
-  const scoreboard = await getGameLeaderboard(slug, 8, identity.userId);
+  const scoreboard = await getGameLeaderboard(
+    slug,
+    8,
+    identity.userId,
+    scoreKey,
+  );
+  const scoreLabel = scoreKey === CLASSIC_SCORE_KEY ? "Score" : "Daily score";
   const resultMessage = saveResult.saved
     ? saveResult.entry
-      ? `Score saved at ${saveResult.entry.score}.`
-      : "Score saved."
+      ? `${scoreLabel} saved at ${saveResult.entry.score}.`
+      : `${scoreLabel} saved.`
     : "Your saved best is already higher than this run.";
 
   return NextResponse.json({

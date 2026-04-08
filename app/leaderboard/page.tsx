@@ -9,6 +9,9 @@ import { buildMetadata, formatDate, getGameBySlug } from "@/lib/site";
 
 const leaderboardGameSlugs: SupportedScoreGameSlug[] = [
   "sudoku",
+  "wordle",
+  "waffle",
+  "word-search",
   "oilcap",
   "acornsweeper",
 ];
@@ -27,6 +30,8 @@ export const metadata = buildMetadata({
     "game leaderboard",
     "top scores",
     "sudoku leaderboard",
+    "wordle leaderboard",
+    "word search leaderboard",
     "oilcap leaderboard",
     "browser game rankings",
   ],
@@ -61,8 +66,8 @@ export default async function LeaderboardPage() {
             Leaderboard
           </h1>
           <p className="max-w-3xl text-lg leading-8 text-base-content/80">
-            Every score is saved from a verified account. Check out your competition, or jump into a game and try to take
-            a higher spot.
+            Every score is saved from a verified account. Check out your
+            competition, or jump into a game and try to take a higher spot.
           </p>
         </div>
       </section>

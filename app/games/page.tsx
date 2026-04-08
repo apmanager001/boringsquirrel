@@ -4,11 +4,14 @@ import { buildMetadata, gameCatalog } from "@/lib/site";
 export const metadata = buildMetadata({
   title: "Games",
   description:
-    "Explore upcoming browser games from Boring Squirrel, including Sudoku, Oilcap, and AcornSweeper.",
+    "Explore browser games from Boring Squirrel, including Sudoku, Wordle, Waffle, Word Search, Oilcap, and AcornSweeper.",
   path: "/games",
   keywords: [
     "browser games",
     "sudoku",
+    "wordle",
+    "waffle",
+    "word search",
     "pipe game",
     "minesweeper",
     "web puzzles",

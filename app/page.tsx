@@ -1,9 +1,22 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Spotlight, Gamepad2, Rss } from "lucide-react";
-import { GameCard } from "@/components/game-card";
+import {
+  ArrowRight,
+  CalendarDays,
+  Gamepad2,
+  Rss,
+  Spotlight,
+} from "lucide-react";
+// import { GameCard } from "@/components/game-card";
+import { GameTable } from "@/components/game-table";
 import { PostCard } from "@/components/post-card";
 import GameCards from "@/components/games/gameCards";
+import {
+  buildGamePlayHref,
+  createDailyScoreKey,
+  formatDailyPuzzleDate,
+  getCurrentDailyPuzzleDayKey,
+} from "@/lib/games/daily";
 import { getPopularPosts, getRecentPosts } from "@/lib/blog";
 import { formatGameScoreDetails } from "@/lib/games/score-formatting";
 import {
@@ -14,13 +27,21 @@ import { buildMetadata, gameCatalog, getGameBySlug } from "@/lib/site";
 
 const homepageLeaderboardGameSlugs: SupportedScoreGameSlug[] = [
   "sudoku",
+  "wordle",
+  "waffle",
+  "word-search",
   "oilcap",
   "acornsweeper",
 ];
+const dailyPuzzleGameSlugs = ["wordle", "waffle", "word-search"] as const;
 
 type HomeLeaderboardSection = {
   game: NonNullable<ReturnType<typeof getGameBySlug>>;
   scoreboard: Awaited<ReturnType<typeof getGameLeaderboard>>;
+};
+
+type HomeDailySection = HomeLeaderboardSection & {
+  href: string;
 };
 
 export const metadata = buildMetadata({
@@ -33,6 +54,8 @@ export const metadata = buildMetadata({
     "indie web games",
     "SEO blog",
     "sudoku online",
+    "wordle",
+    "word search",
     "puzzle build notes",
   ],
 });
@@ -40,29 +63,57 @@ export const metadata = buildMetadata({
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [topLikedPosts, latestPosts, leaderboardSections] = await Promise.all([
-    getPopularPosts(2),
-    getRecentPosts(3),
-    Promise.all(
-      homepageLeaderboardGameSlugs.map(async (slug) => {
-        const game = getGameBySlug(slug);
+  const todayDayKey = getCurrentDailyPuzzleDayKey();
+  const todayDailyScoreKey = createDailyScoreKey(todayDayKey);
+  const [topLikedPosts, latestPosts, leaderboardSections, dailySections] =
+    await Promise.all([
+      getPopularPosts(2),
+      getRecentPosts(3),
+      Promise.all(
+        homepageLeaderboardGameSlugs.map(async (slug) => {
+          const game = getGameBySlug(slug);
 
-        if (!game) {
-          return null;
-        }
+          if (!game) {
+            return null;
+          }
 
-        return {
-          game,
-          scoreboard: await getGameLeaderboard(slug, 5),
-        };
-      }),
-    ),
-  ]);
+          return {
+            game,
+            scoreboard: await getGameLeaderboard(slug, 3),
+          };
+        }),
+      ),
+      Promise.all(
+        dailyPuzzleGameSlugs.map(async (slug) => {
+          const game = getGameBySlug(slug);
+
+          if (!game) {
+            return null;
+          }
+
+          return {
+            game,
+            href: buildGamePlayHref(slug, {
+              mode: "daily",
+              dayKey: todayDayKey,
+            }),
+            scoreboard: await getGameLeaderboard(
+              slug,
+              3,
+              undefined,
+              todayDailyScoreKey,
+            ),
+          };
+        }),
+      ),
+    ]);
 
   const homeLeaderboardSections = leaderboardSections.filter(
     (section): section is HomeLeaderboardSection => Boolean(section),
   );
-
+  const homeDailySections = dailySections.filter(
+    (section): section is HomeDailySection => Boolean(section),
+  );
 
   const featureCards = [
     {
@@ -186,7 +237,20 @@ export default async function Home() {
           </div>
         </div>
       </section>
-
+      <section className="page-shell mt-16 space-y-6">
+        <div className="space-y-3">
+          <p className="section-kicker">Games section</p>
+          <h2 className="display-font text-4xl font-semibold text-base-content">
+            Free Games, Compete on the Leaderboard
+          </h2>
+        </div>
+        <div className="grid gap-6 lg:grid-cols-3">
+          {gameCatalog.map((game) => (
+            // <GameCard key={game.slug} game={game} />
+            <GameTable key={game.slug} game={game} />
+          ))}
+        </div>
+      </section>
       <section className="page-shell mt-10 space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-3">
@@ -205,17 +269,96 @@ export default async function Home() {
           ))}
         </div>
       </section>
-
       <section className="page-shell mt-16 space-y-6">
-        <div className="space-y-3">
-          <p className="section-kicker">Games section</p>
-          <h2 className="display-font text-4xl font-semibold text-base-content">
-            Guest-playable games with verified scoreboards live
-          </h2>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-3">
+            <p className="section-kicker">Daily puzzles</p>
+            <h2 className="display-font text-4xl font-semibold text-base-content">
+              One shared board for everyone today
+            </h2>
+            <p className="max-w-3xl text-sm leading-7 text-base-content/78 sm:text-base">
+              These daily boards reset on the UTC date. Every verified save here
+              is competing on the exact same puzzle, not a private random run.
+            </p>
+          </div>
+
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">
+            <CalendarDays className="size-4" />
+            {formatDailyPuzzleDate(todayDayKey)} · UTC reset
+          </div>
         </div>
-        <div className="grid gap-6 lg:grid-cols-3">
-          {gameCatalog.map((game) => (
-            <GameCard key={game.slug} game={game} />
+
+        <div className="grid gap-6 xl:grid-cols-3">
+          {homeDailySections.map(({ game, href, scoreboard }) => (
+            <article
+              key={`${game.slug}-daily`}
+              className="card-surface rounded-[1.8rem] p-6"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="section-kicker before:w-5">{game.name} daily</p>
+                  <h3 className="display-font mt-3 text-2xl font-semibold text-base-content">
+                    Today&apos;s shared board
+                  </h3>
+                </div>
+                <CalendarDays className="mt-1 size-5 text-primary" />
+              </div>
+
+              <p className="mt-4 text-sm leading-7 text-base-content/78">
+                {game.scoreHook}
+              </p>
+
+              {!scoreboard.available ? (
+                <div className="mt-5 rounded-[1.3rem] border border-base-300/15 bg-white/45 px-4 py-3 text-sm leading-7 text-base-content/72">
+                  Daily scores are unavailable right now.
+                </div>
+              ) : scoreboard.leaderboard.length === 0 ? (
+                <div className="mt-5 rounded-[1.3rem] border border-base-300/15 bg-white/45 px-4 py-3 text-sm leading-7 text-base-content/72">
+                  No verified daily clears have landed yet.
+                </div>
+              ) : (
+                <div className="mt-5 space-y-3">
+                  {scoreboard.leaderboard.map((entry) => (
+                    <div
+                      key={`${game.slug}-daily-${entry.userId}`}
+                      className="rounded-[1.3rem] border border-base-300/15 bg-white/45 px-4 py-3"
+                    >
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-4 min-w-0">
+                          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-base-content/45">
+                            #{entry.rank}
+                          </p>
+                          <Link
+                            href={`/profile/${encodeURIComponent(entry.userId)}`}
+                            className="block truncate font-semibold text-base-content transition hover:text-primary"
+                          >
+                            {entry.username}
+                          </Link>
+                          {/* <p className="mt-1 text-sm leading-6 text-base-content/72">
+                            {formatGameScoreDetails(game.slug, entry.details) ||
+                              "Verified daily score on file."}
+                          </p> */}
+                        </div>
+
+                        <p className="display-font text-3xl font-semibold text-base-content">
+                          {entry.score}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="mt-5">
+                <Link
+                  href={href}
+                  className="btn btn-primary w-full rounded-full"
+                >
+                  Play today&apos;s {game.name}
+                  <ArrowRight className="size-4" />
+                </Link>
+              </div>
+            </article>
           ))}
         </div>
       </section>
@@ -225,7 +368,7 @@ export default async function Home() {
           <div className="space-y-3">
             <p className="section-kicker">Leaderboard preview</p>
             <h2 className="display-font text-4xl font-semibold text-base-content">
-              Top 5
+              Top 3
             </h2>
             <p className="max-w-3xl text-sm leading-7 text-base-content/78 sm:text-base">
               Can you climb higher? Every score on the leaderboard is a verified
@@ -247,9 +390,6 @@ export default async function Home() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="section-kicker before:w-5">{game.name}</p>
-                  <h3 className="display-font mt-3 text-2xl font-semibold text-base-content">
-                    Top 5 players
-                  </h3>
                 </div>
                 <Spotlight className="mt-1 size-5 text-secondary" />
               </div>
@@ -265,30 +405,30 @@ export default async function Home() {
               ) : (
                 <div className="mt-5 space-y-3">
                   {scoreboard.leaderboard.map((entry) => {
-                    const detailText = formatGameScoreDetails(
-                      game.slug,
-                      entry.details,
-                    );
+                    // const detailText = formatGameScoreDetails(
+                    //   game.slug,
+                    //   entry.details,
+                    // );
 
                     return (
                       <div
                         key={`${game.slug}-${entry.userId}`}
-                        className="rounded-[1.3rem] border border-base-300/15 bg-white/45 px-4 py-3"
+                        className="rounded-[1.3rem] border border-base-300/15 bg-white/45 p-3"
                       >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="min-w-0">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center justify-around gap-4">
                             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-base-content/45">
                               #{entry.rank}
                             </p>
                             <Link
                               href={`/profile/${encodeURIComponent(entry.userId)}`}
-                              className="mt-2 block truncate font-semibold text-base-content transition hover:text-primary"
+                              className=" block truncate font-semibold text-base-content transition hover:text-primary"
                             >
                               {entry.username}
                             </Link>
-                            <p className="mt-1 text-sm leading-6 text-base-content/72">
+                            {/* <p className="mt-1 text-sm leading-6 text-base-content/72">
                               {detailText || "Verified score on file."}
-                            </p>
+                            </p> */}
                           </div>
 
                           <p className="display-font text-3xl font-semibold text-base-content">

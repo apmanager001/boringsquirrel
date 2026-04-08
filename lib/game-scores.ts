@@ -1,5 +1,6 @@
 import type { GameEntry } from "@/lib/site";
 import { connectToDatabase } from "@/lib/db";
+import { CLASSIC_SCORE_KEY, normalizeScoreKey } from "@/lib/games/daily";
 import { GameScoreModel } from "@/lib/models/game-score";
 
 export type GameScoreDetailValue = string | number | boolean | null;
@@ -7,12 +8,13 @@ export type GameScoreDetails = Record<string, GameScoreDetailValue>;
 
 export type SupportedScoreGameSlug = Extract<
   GameEntry["slug"],
-  "sudoku" | "oilcap" | "acornsweeper"
+  "sudoku" | "wordle" | "waffle" | "word-search" | "oilcap" | "acornsweeper"
 >;
 
 export type SavedGameScore = {
   userId: string;
   gameSlug: SupportedScoreGameSlug;
+  scoreKey: string;
   username: string;
   displayName: string;
   score: number;
@@ -29,6 +31,7 @@ export type RankedGameScore = SavedGameScore & {
 type GameScoreDocument = {
   _id?: string;
   gameSlug: SupportedScoreGameSlug;
+  scoreKey?: string;
   userId: string;
   username: string;
   displayName: string;
@@ -41,12 +44,21 @@ type GameScoreDocument = {
 
 type SaveGameScoreInput = {
   gameSlug: SupportedScoreGameSlug;
+  scoreKey?: string;
   userId: string;
   username: string;
   displayName: string;
   score: number;
   details: GameScoreDetails;
 };
+
+const legacyUniqueIndexName = "gameSlug_1_userId_1";
+const legacyLeaderboardIndexName = "gameSlug_1_isHidden_1_score_-1_updatedAt_1";
+const scopedUniqueIndexName = "gameSlug_1_scoreKey_1_userId_1";
+const scopedLeaderboardIndexName =
+  "gameSlug_1_scoreKey_1_isHidden_1_score_-1_updatedAt_1";
+
+let ensureGameScoreIndexesPromise: Promise<void> | null = null;
 
 function isDuplicateKeyError(error: unknown) {
   return (
@@ -61,6 +73,83 @@ function normalizeDetails(details: GameScoreDetails) {
   return Object.fromEntries(
     Object.entries(details).filter(([, value]) => value !== undefined),
   ) as GameScoreDetails;
+}
+
+function isCollectionAlreadyExistsError(error: unknown) {
+  const message = error instanceof Error ? error.message.toLowerCase() : "";
+
+  return message.includes("already exists");
+}
+
+function isIndexMissingError(error: unknown) {
+  const message = error instanceof Error ? error.message.toLowerCase() : "";
+
+  return message.includes("index not found");
+}
+
+async function ensureGameScoreIndexes() {
+  if (ensureGameScoreIndexesPromise) {
+    return ensureGameScoreIndexesPromise;
+  }
+
+  ensureGameScoreIndexesPromise = (async () => {
+    await GameScoreModel.createCollection().catch((error) => {
+      if (!isCollectionAlreadyExistsError(error)) {
+        throw error;
+      }
+    });
+
+    await GameScoreModel.updateMany(
+      { scoreKey: { $exists: false } },
+      {
+        $set: {
+          scoreKey: CLASSIC_SCORE_KEY,
+        },
+      },
+    );
+
+    const indexes = await GameScoreModel.collection.indexes();
+
+    if (indexes.some((index) => index.name === legacyUniqueIndexName)) {
+      await GameScoreModel.collection
+        .dropIndex(legacyUniqueIndexName)
+        .catch((error) => {
+          if (!isIndexMissingError(error)) {
+            throw error;
+          }
+        });
+    }
+
+    if (indexes.some((index) => index.name === legacyLeaderboardIndexName)) {
+      await GameScoreModel.collection
+        .dropIndex(legacyLeaderboardIndexName)
+        .catch((error) => {
+          if (!isIndexMissingError(error)) {
+            throw error;
+          }
+        });
+    }
+
+    await GameScoreModel.collection.createIndex(
+      { gameSlug: 1, scoreKey: 1, userId: 1 },
+      {
+        unique: true,
+        name: scopedUniqueIndexName,
+      },
+    );
+
+    await GameScoreModel.collection.createIndex(
+      { gameSlug: 1, scoreKey: 1, isHidden: 1, score: -1, updatedAt: 1 },
+      {
+        name: scopedLeaderboardIndexName,
+      },
+    );
+  })().catch((error) => {
+    ensureGameScoreIndexesPromise = null;
+    throw error;
+  });
+
+  return ensureGameScoreIndexesPromise;
 }
 
 function toIsoString(value: Date | string | undefined) {
@@ -79,6 +168,7 @@ function mapSavedGameScore(document: GameScoreDocument): SavedGameScore {
   return {
     userId: document.userId,
     gameSlug: document.gameSlug,
+    scoreKey: normalizeScoreKey(document.scoreKey) ?? CLASSIC_SCORE_KEY,
     username: document.username,
     displayName: document.displayName,
     score: document.score,
@@ -91,13 +181,21 @@ function mapSavedGameScore(document: GameScoreDocument): SavedGameScore {
 export function isSupportedScoreGame(
   gameSlug: string,
 ): gameSlug is SupportedScoreGameSlug {
-  return ["sudoku", "oilcap", "acornsweeper"].includes(gameSlug);
+  return [
+    "sudoku",
+    "wordle",
+    "waffle",
+    "word-search",
+    "oilcap",
+    "acornsweeper",
+  ].includes(gameSlug);
 }
 
 export async function getGameLeaderboard(
   gameSlug: SupportedScoreGameSlug,
   limit = 8,
   viewerUserId?: string,
+  scoreKey = CLASSIC_SCORE_KEY,
 ) {
   const database = await connectToDatabase();
 
@@ -109,15 +207,23 @@ export async function getGameLeaderboard(
     };
   }
 
+  await ensureGameScoreIndexes();
+
   const safeLimit = Math.min(Math.max(limit, 1), 20);
+  const normalizedScoreKey = normalizeScoreKey(scoreKey) ?? CLASSIC_SCORE_KEY;
   const [leaderboardDocuments, viewerDocument] = await Promise.all([
-    GameScoreModel.find({ gameSlug, isHidden: { $ne: true } })
+    GameScoreModel.find({
+      gameSlug,
+      scoreKey: normalizedScoreKey,
+      isHidden: { $ne: true },
+    })
       .sort({ score: -1, updatedAt: 1 })
       .limit(safeLimit)
       .lean(),
     viewerUserId
       ? GameScoreModel.findOne({
           gameSlug,
+          scoreKey: normalizedScoreKey,
           userId: viewerUserId,
           isHidden: { $ne: true },
         }).lean()
@@ -148,6 +254,8 @@ export async function getUserSavedScores(userId: string) {
     return [] as SavedGameScore[];
   }
 
+  await ensureGameScoreIndexes();
+
   const scoreDocuments = (await GameScoreModel.find({
     userId,
     isHidden: { $ne: true },
@@ -164,6 +272,8 @@ export async function hideUserGameScores(userId: string) {
   if (!database) {
     return [] as SupportedScoreGameSlug[];
   }
+
+  await ensureGameScoreIndexes();
 
   const affectedGameSlugs = (
     await GameScoreModel.distinct("gameSlug", {
@@ -203,6 +313,8 @@ export async function syncStoredGameScoreIdentity({
     return false;
   }
 
+  await ensureGameScoreIndexes();
+
   await GameScoreModel.updateMany(
     { userId },
     {
@@ -218,6 +330,7 @@ export async function syncStoredGameScoreIdentity({
 
 export async function saveGameScore({
   gameSlug,
+  scoreKey,
   userId,
   username,
   displayName,
@@ -235,9 +348,13 @@ export async function saveGameScore({
     };
   }
 
+  await ensureGameScoreIndexes();
+
   const normalizedDetails = normalizeDetails(details);
+  const normalizedScoreKey = normalizeScoreKey(scoreKey) ?? CLASSIC_SCORE_KEY;
   let existing = (await GameScoreModel.findOne({
     gameSlug,
+    scoreKey: normalizedScoreKey,
     userId,
   }).lean()) as GameScoreDocument | null;
 
@@ -245,6 +362,7 @@ export async function saveGameScore({
     try {
       const created = await GameScoreModel.create({
         gameSlug,
+        scoreKey: normalizedScoreKey,
         userId,
         username,
         displayName,
@@ -265,6 +383,7 @@ export async function saveGameScore({
 
       existing = (await GameScoreModel.findOne({
         gameSlug,
+        scoreKey: normalizedScoreKey,
         userId,
       }).lean()) as GameScoreDocument | null;
     }
@@ -277,7 +396,7 @@ export async function saveGameScore({
       existing.displayName !== displayName
     ) {
       await GameScoreModel.updateOne(
-        { gameSlug, userId },
+        { gameSlug, scoreKey: normalizedScoreKey, userId },
         {
           $set: {
             username,
@@ -301,7 +420,7 @@ export async function saveGameScore({
   }
 
   const updated = (await GameScoreModel.findOneAndUpdate(
-    { gameSlug, userId },
+    { gameSlug, scoreKey: normalizedScoreKey, userId },
     {
       $set: {
         username,
@@ -312,6 +431,7 @@ export async function saveGameScore({
       },
       $setOnInsert: {
         gameSlug,
+        scoreKey: normalizedScoreKey,
         userId,
       },
     },

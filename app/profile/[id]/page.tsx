@@ -4,6 +4,11 @@ import type { Metadata } from "next";
 import { BadgeCheck, Trophy, UserRound } from "lucide-react";
 import { ProfileReportFlag } from "@/components/profile/profile-report-flag";
 import { ProfileSocialHandles } from "@/components/profile/profile-social-handles";
+import {
+  buildGamePlayHref,
+  formatDailyPuzzleDate,
+  parseScoreKey,
+} from "@/lib/games/daily";
 import { formatGameScoreDetails } from "@/lib/games/score-formatting";
 import { getPublicProfileById } from "@/lib/profiles";
 import { buildMetadata, formatDate, getGameBySlug } from "@/lib/site";
@@ -127,6 +132,15 @@ export default async function PublicProfilePage({
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               {profile.savedScores.map((savedScore) => {
                 const game = getGameBySlug(savedScore.gameSlug);
+                const scoreScope = parseScoreKey(savedScore.scoreKey);
+                const gameHref = buildGamePlayHref(savedScore.gameSlug, {
+                  mode: scoreScope.mode,
+                  dayKey: scoreScope.dayKey,
+                });
+                const scoreLabel =
+                  scoreScope.mode === "daily"
+                    ? `${game?.name ?? savedScore.gameSlug} daily`
+                    : (game?.name ?? savedScore.gameSlug);
                 const detailText = formatGameScoreDetails(
                   savedScore.gameSlug,
                   savedScore.details,
@@ -134,13 +148,11 @@ export default async function PublicProfilePage({
 
                 return (
                   <Link
-                    key={savedScore.gameSlug}
-                    href={`/games/${savedScore.gameSlug}`}
+                    key={`${savedScore.gameSlug}-${savedScore.scoreKey}`}
+                    href={gameHref}
                     className="rounded-[1.4rem] border border-base-300/15 bg-white/45 p-4 transition hover:border-base-300/30 hover:bg-white/60"
                   >
-                    <p className="section-kicker before:w-5">
-                      {game?.name ?? savedScore.gameSlug}
-                    </p>
+                    <p className="section-kicker before:w-5">{scoreLabel}</p>
                     <p className="display-font mt-3 text-4xl font-semibold text-base-content">
                       {savedScore.score}
                     </p>
@@ -148,6 +160,9 @@ export default async function PublicProfilePage({
                       {detailText || "Verified score saved for this game."}
                     </p>
                     <p className="mt-3 text-xs uppercase tracking-[0.2em] text-base-content/45">
+                      {scoreScope.mode === "daily" && scoreScope.dayKey
+                        ? `Puzzle ${formatDailyPuzzleDate(scoreScope.dayKey)} · `
+                        : ""}
                       Updated {formatDate(savedScore.updatedAt)}
                     </p>
                   </Link>
@@ -213,7 +228,7 @@ export default async function PublicProfilePage({
               <p>Jump into the games and try to beat the runs on this page.</p>
               <p>
                 Every verified save updates the player&apos;s best run for that
-                game.
+                game or that day&apos;s shared puzzle.
               </p>
             </div>
             <div className="mt-5 flex flex-wrap gap-3">

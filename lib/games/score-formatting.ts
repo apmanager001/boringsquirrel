@@ -1,5 +1,8 @@
 import { formatAcornSweeperTime } from "@/lib/games/acornsweeper";
 import { formatSudokuTime } from "@/lib/games/sudoku";
+import { formatWaffleTime } from "@/lib/games/waffle";
+import { formatWordSearchTime } from "@/lib/games/word-search";
+import { formatWordleTime } from "@/lib/games/wordle";
 import type {
   GameScoreDetails,
   SupportedScoreGameSlug,
@@ -73,6 +76,44 @@ export function formatGameScoreDetails(
       difficulty,
       elapsedSeconds !== null ? formatAcornSweeperTime(elapsedSeconds) : null,
       flagSummary,
+    ].filter((part): part is string => Boolean(part));
+
+    return parts.join(" · ");
+  }
+
+  if (gameSlug === "wordle") {
+    const guessCount = readNumber(details, "guessCount");
+    const maxGuesses = readNumber(details, "maxGuesses");
+    const elapsedSeconds = readNumber(details, "elapsedSeconds");
+    const parts = [
+      guessCount !== null ? `${guessCount}/${maxGuesses ?? 6} guesses` : null,
+      elapsedSeconds !== null ? formatWordleTime(elapsedSeconds) : null,
+    ].filter((part): part is string => Boolean(part));
+
+    return parts.join(" · ");
+  }
+
+  if (gameSlug === "waffle") {
+    const swapsRemaining = readNumber(details, "swapsRemaining");
+    const elapsedSeconds = readNumber(details, "elapsedSeconds");
+    const completedWords = readNumber(details, "completedWords");
+    const parts = [
+      completedWords !== null ? `${completedWords}/6 words` : null,
+      swapsRemaining !== null ? `${swapsRemaining} swaps left` : null,
+      elapsedSeconds !== null ? formatWaffleTime(elapsedSeconds) : null,
+    ].filter((part): part is string => Boolean(part));
+
+    return parts.join(" · ");
+  }
+
+  if (gameSlug === "word-search") {
+    const wordCount = readNumber(details, "wordCount");
+    const elapsedSeconds = readNumber(details, "elapsedSeconds");
+    const wrongSelections = readNumber(details, "wrongSelections");
+    const parts = [
+      wordCount !== null ? `${wordCount} words` : null,
+      elapsedSeconds !== null ? formatWordSearchTime(elapsedSeconds) : null,
+      wrongSelections !== null ? pluralize(wrongSelections, "miss") : null,
     ].filter((part): part is string => Boolean(part));
 
     return parts.join(" · ");

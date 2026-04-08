@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   Trophy,
 } from "lucide-react";
+import { CLASSIC_SCORE_KEY, parseScoreKey } from "@/lib/games/daily";
 import { formatGameScoreDetails } from "@/lib/games/score-formatting";
 import type {
   GameScoreDetails,
@@ -32,6 +33,9 @@ export type ScorePanelProps = {
   score: number;
   details: GameScoreDetails;
   canSubmit: boolean;
+  scoreKey?: string;
+  callbackPath?: string;
+  scopeLabel?: string;
 };
 
 export function ScorePanel({
@@ -39,11 +43,19 @@ export function ScorePanel({
   score,
   details,
   canSubmit,
+  scoreKey = CLASSIC_SCORE_KEY,
+  callbackPath,
+  scopeLabel,
 }: ScorePanelProps) {
   const [scoreboard, setScoreboard] = useState<ScoreboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [submitPending, startSubmitTransition] = useTransition();
+  const scoreScope = parseScoreKey(scoreKey);
+  const isDailyScope = scoreScope.mode === "daily";
+  const scopeName =
+    scopeLabel ?? (isDailyScope ? "this daily puzzle" : "this game");
+  const bestLabel = isDailyScope ? "daily best" : "saved best";
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -51,11 +63,22 @@ export function ScorePanel({
     async function loadScoreboard() {
       setLoading(true);
 
+      const searchParams = new URLSearchParams({
+        limit: "5",
+      });
+
+      if (scoreKey !== CLASSIC_SCORE_KEY) {
+        searchParams.set("scoreKey", scoreKey);
+      }
+
       try {
-        const response = await fetch(`/api/games/${gameSlug}/scores?limit=5`, {
-          cache: "no-store",
-          signal: abortController.signal,
-        });
+        const response = await fetch(
+          `/api/games/${gameSlug}/scores?${searchParams.toString()}`,
+          {
+            cache: "no-store",
+            signal: abortController.signal,
+          },
+        );
         const data = (await response.json()) as Partial<ScoreboardResponse> & {
           message?: string | null;
         };
@@ -88,13 +111,16 @@ export function ScorePanel({
     return () => {
       abortController.abort();
     };
-  }, [gameSlug]);
+  }, [gameSlug, scoreKey]);
 
   const currentBest = scoreboard?.viewerBest;
   const candidateDetails = formatGameScoreDetails(gameSlug, details);
   const improvementAvailable =
     canSubmit && score > 0 && (!currentBest || score > currentBest.score);
-  const loginHref = `/login?callbackURL=/games/${gameSlug}`;
+  const resolvedCallbackPath = callbackPath ?? `/games/${gameSlug}`;
+  const loginHref = `/login?callbackURL=${encodeURIComponent(
+    resolvedCallbackPath,
+  )}`;
 
   function handleSaveScore() {
     if (!improvementAvailable || submitPending) {
@@ -110,6 +136,7 @@ export function ScorePanel({
           },
           body: JSON.stringify({
             score,
+            scoreKey,
             details,
           }),
         });
@@ -151,18 +178,18 @@ export function ScorePanel({
   }
 
   const statusCopy = loading
-    ? "Loading the verified leaderboard."
+    ? `Loading the verified leaderboard for ${scopeName}.`
     : scoreboard?.authState === "disabled"
       ? "Authentication is offline in this environment, so score saving is unavailable."
       : scoreboard?.authState === "guest"
-        ? "Guests can play freely. Verified accounts can save their best runs here."
+        ? `Guests can play freely. Verified accounts can save their best runs for ${scopeName} here.`
         : scoreboard?.authState === "unverified"
           ? "Your account is signed in, but email verification is still required for saved scores."
           : canSubmit
             ? improvementAvailable
-              ? "This run is ready to submit as your saved best."
-              : "Your saved best is already higher than this run."
-            : "Finish the current run to submit a score to the leaderboard.";
+              ? `This run is ready to submit as your ${bestLabel}.`
+              : `Your ${bestLabel} is already higher than this run.`
+            : `Finish the current run to submit a score for ${scopeName}.`;
 
   return (
     <div className="rounded-[1.6rem] border border-base-300/15 bg-white/40 p-5">
@@ -170,7 +197,7 @@ export function ScorePanel({
         <div>
           <p className="section-kicker before:w-4">Leaderboard</p>
           <h3 className="display-font text-2xl font-semibold">
-            Verified best runs
+            {isDailyScope ? "Verified daily runs" : "Verified best runs"}
           </h3>
         </div>
         <Trophy className="size-6 text-secondary" />
@@ -182,7 +209,7 @@ export function ScorePanel({
       {scoreboard?.authState === "verified" && (
         <div className="mt-4 rounded-[1.2rem] bg-base-100/72 p-4">
           <p className="text-xs uppercase tracking-[0.3em] text-base-content/45">
-            Your saved best
+            Your {bestLabel}
           </p>
           <p className="display-font mt-2 text-3xl font-semibold text-base-content">
             {currentBest ? currentBest.score : "-"}
@@ -191,7 +218,7 @@ export function ScorePanel({
             {currentBest
               ? formatGameScoreDetails(gameSlug, currentBest.details) ||
                 "Verified score on file."
-              : "No verified score saved for this game yet."}
+              : `No verified score saved for ${scopeName} yet.`}
           </p>
         </div>
       )}
@@ -225,7 +252,7 @@ export function ScorePanel({
               </button>
             ) : (
               <div className="rounded-[1.2rem] border border-base-300/20 bg-white/50 px-4 py-3 text-sm leading-7 text-base-content/78">
-                Keep pushing. This run did not beat your saved best of{" "}
+                Keep pushing. This run did not beat your {bestLabel} of{" "}
                 {currentBest?.score ?? 0}.
               </div>
             )
@@ -289,7 +316,7 @@ export function ScorePanel({
           })
         ) : (
           <div className="rounded-[1.2rem] border border-dashed border-base-300/20 bg-white/30 px-4 py-4 text-sm leading-7 text-base-content/72">
-            No verified scores have been saved for this game yet.
+            No verified scores have been saved for {scopeName} yet.
           </div>
         )}
       </div>
