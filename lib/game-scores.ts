@@ -34,6 +34,7 @@ type GameScoreDocument = {
   displayName: string;
   score: number;
   details?: GameScoreDetails;
+  isHidden?: boolean;
   createdAt?: Date | string;
   updatedAt?: Date | string;
 };
@@ -110,12 +111,16 @@ export async function getGameLeaderboard(
 
   const safeLimit = Math.min(Math.max(limit, 1), 20);
   const [leaderboardDocuments, viewerDocument] = await Promise.all([
-    GameScoreModel.find({ gameSlug })
+    GameScoreModel.find({ gameSlug, isHidden: { $ne: true } })
       .sort({ score: -1, updatedAt: 1 })
       .limit(safeLimit)
       .lean(),
     viewerUserId
-      ? GameScoreModel.findOne({ gameSlug, userId: viewerUserId }).lean()
+      ? GameScoreModel.findOne({
+          gameSlug,
+          userId: viewerUserId,
+          isHidden: { $ne: true },
+        }).lean()
       : null,
   ]);
 
@@ -143,11 +148,44 @@ export async function getUserSavedScores(userId: string) {
     return [] as SavedGameScore[];
   }
 
-  const scoreDocuments = (await GameScoreModel.find({ userId })
+  const scoreDocuments = (await GameScoreModel.find({
+    userId,
+    isHidden: { $ne: true },
+  })
     .sort({ updatedAt: -1 })
     .lean()) as GameScoreDocument[];
 
   return scoreDocuments.map(mapSavedGameScore);
+}
+
+export async function hideUserGameScores(userId: string) {
+  const database = await connectToDatabase();
+
+  if (!database) {
+    return [] as SupportedScoreGameSlug[];
+  }
+
+  const affectedGameSlugs = (
+    await GameScoreModel.distinct("gameSlug", {
+      userId,
+      isHidden: { $ne: true },
+    })
+  ).filter(isSupportedScoreGame);
+
+  if (affectedGameSlugs.length === 0) {
+    return [] as SupportedScoreGameSlug[];
+  }
+
+  await GameScoreModel.updateMany(
+    { userId, isHidden: { $ne: true } },
+    {
+      $set: {
+        isHidden: true,
+      },
+    },
+  );
+
+  return affectedGameSlugs;
 }
 
 export async function syncStoredGameScoreIdentity({
@@ -234,6 +272,7 @@ export async function saveGameScore({
 
   if (existing && score <= existing.score) {
     if (
+      existing.isHidden === true ||
       existing.username !== username ||
       existing.displayName !== displayName
     ) {
@@ -243,6 +282,7 @@ export async function saveGameScore({
           $set: {
             username,
             displayName,
+            isHidden: false,
           },
         },
       );
@@ -268,6 +308,7 @@ export async function saveGameScore({
         displayName,
         score,
         details: normalizedDetails,
+        isHidden: false,
       },
       $setOnInsert: {
         gameSlug,

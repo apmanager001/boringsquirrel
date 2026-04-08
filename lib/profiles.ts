@@ -1,4 +1,11 @@
 import { connectMongoClient, getMongoDatabase } from "@/lib/auth-db";
+import {
+  fallbackUsernameFromEmail,
+  getStoredAuthUserById,
+  getStoredAuthUserProfileIdentity,
+  type StoredAuthSocialLinks,
+  type StoredAuthUserDocument,
+} from "@/lib/auth-users";
 import { hasBetterAuthConfig } from "@/lib/env";
 import { getUserSavedScores, type SavedGameScore } from "@/lib/game-scores";
 
@@ -25,15 +32,6 @@ type PublicProfileDocument = {
   updatedAt?: Date | string;
 };
 
-type PublicAuthUserDocument = {
-  id: string;
-  email?: string | null;
-  username?: string | null;
-  displayUsername?: string | null;
-  name?: string | null;
-  socialLinks?: StoredProfileSocialLinks | null;
-};
-
 export type PublicProfile = {
   userId: string;
   username: string;
@@ -41,44 +39,6 @@ export type PublicProfile = {
   socialLinks: PublicProfileSocialLinks;
   savedScores: SavedGameScore[];
 };
-
-function fallbackUsernameFromEmail(email?: string | null) {
-  if (!email) {
-    return null;
-  }
-
-  const candidate = email.split("@")[0]?.trim();
-  return candidate ? candidate : null;
-}
-
-async function getAuthUserById(userId: string) {
-  if (!hasBetterAuthConfig()) {
-    return null;
-  }
-
-  await connectMongoClient();
-
-  const database = getMongoDatabase();
-
-  if (!database) {
-    return null;
-  }
-
-  return database.collection<PublicAuthUserDocument>("user").findOne(
-    { id: userId },
-    {
-      projection: {
-        _id: 0,
-        id: 1,
-        email: 1,
-        username: 1,
-        displayUsername: 1,
-        name: 1,
-        socialLinks: 1,
-      },
-    },
-  );
-}
 
 function normalizeSocialLinkValue(value?: string | null) {
   return typeof value === "string" ? value.trim() : "";
@@ -148,25 +108,30 @@ async function getProfileDocumentByUserId(userId: string) {
 
 function getProfileSocialLinksFromSources(
   profileDocument?: PublicProfileDocument | null,
-  authUser?: PublicAuthUserDocument | null,
+  authUser?: StoredAuthUserDocument | null,
 ): PublicProfileSocialLinks {
+  const authUserSocialLinks = authUser?.socialLinks as
+    | StoredAuthSocialLinks
+    | null
+    | undefined;
+
   return {
     ...createEmptyProfileSocialLinks(),
     steamHandle:
       normalizeSocialLinkValue(profileDocument?.socialLinks?.steamHandle) ||
       deriveHandleFromLegacyValue(profileDocument?.socialLinks?.steamUrl) ||
-      normalizeSocialLinkValue(authUser?.socialLinks?.steamHandle) ||
-      deriveHandleFromLegacyValue(authUser?.socialLinks?.steamUrl),
+      normalizeSocialLinkValue(authUserSocialLinks?.steamHandle) ||
+      deriveHandleFromLegacyValue(authUserSocialLinks?.steamUrl),
     discordHandle:
       normalizeSocialLinkValue(profileDocument?.socialLinks?.discordHandle) ||
       deriveHandleFromLegacyValue(profileDocument?.socialLinks?.discordUrl) ||
-      normalizeSocialLinkValue(authUser?.socialLinks?.discordHandle) ||
-      deriveHandleFromLegacyValue(authUser?.socialLinks?.discordUrl),
+      normalizeSocialLinkValue(authUserSocialLinks?.discordHandle) ||
+      deriveHandleFromLegacyValue(authUserSocialLinks?.discordUrl),
     xboxHandle:
       normalizeSocialLinkValue(profileDocument?.socialLinks?.xboxHandle) ||
       deriveHandleFromLegacyValue(profileDocument?.socialLinks?.xboxUrl) ||
-      normalizeSocialLinkValue(authUser?.socialLinks?.xboxHandle) ||
-      deriveHandleFromLegacyValue(authUser?.socialLinks?.xboxUrl),
+      normalizeSocialLinkValue(authUserSocialLinks?.xboxHandle) ||
+      deriveHandleFromLegacyValue(authUserSocialLinks?.xboxUrl),
     playstationHandle:
       normalizeSocialLinkValue(
         profileDocument?.socialLinks?.playstationHandle,
@@ -174,13 +139,13 @@ function getProfileSocialLinksFromSources(
       deriveHandleFromLegacyValue(
         profileDocument?.socialLinks?.playstationUrl,
       ) ||
-      normalizeSocialLinkValue(authUser?.socialLinks?.playstationHandle) ||
-      deriveHandleFromLegacyValue(authUser?.socialLinks?.playstationUrl),
+      normalizeSocialLinkValue(authUserSocialLinks?.playstationHandle) ||
+      deriveHandleFromLegacyValue(authUserSocialLinks?.playstationUrl),
     twitchHandle:
       normalizeSocialLinkValue(profileDocument?.socialLinks?.twitchHandle) ||
       deriveHandleFromLegacyValue(profileDocument?.socialLinks?.twitchUrl) ||
-      normalizeSocialLinkValue(authUser?.socialLinks?.twitchHandle) ||
-      deriveHandleFromLegacyValue(authUser?.socialLinks?.twitchUrl),
+      normalizeSocialLinkValue(authUserSocialLinks?.twitchHandle) ||
+      deriveHandleFromLegacyValue(authUserSocialLinks?.twitchUrl),
   };
 }
 
@@ -193,7 +158,7 @@ export async function getUserProfileSocialLinks(userId: string) {
 
   const [profileDocument, authUser] = await Promise.all([
     getProfileDocumentByUserId(normalizedUserId),
-    getAuthUserById(normalizedUserId),
+    getStoredAuthUserById(normalizedUserId),
   ]);
 
   return getProfileSocialLinksFromSources(profileDocument, authUser);
@@ -256,26 +221,31 @@ export async function getPublicProfileById(userId: string) {
   if (!normalizedUserId) {
     return null;
   }
-
   const [profileDocument, authUser, savedScores] = await Promise.all([
     getProfileDocumentByUserId(normalizedUserId),
-    getAuthUserById(normalizedUserId),
+    getStoredAuthUserById(normalizedUserId),
     getUserSavedScores(normalizedUserId),
   ]);
+
+  if (authUser?.banned === true) {
+    return null;
+  }
 
   if (!authUser && savedScores.length === 0) {
     return null;
   }
 
   const savedScoreIdentity = savedScores[0] ?? null;
+  const authIdentity = authUser
+    ? getStoredAuthUserProfileIdentity(authUser)
+    : null;
   const username =
-    authUser?.username?.trim() ||
+    authIdentity?.username ||
     savedScoreIdentity?.username ||
     fallbackUsernameFromEmail(authUser?.email) ||
     normalizedUserId;
   const displayName =
-    authUser?.displayUsername?.trim() ||
-    authUser?.name?.trim() ||
+    authIdentity?.displayName ||
     savedScoreIdentity?.displayName ||
     username;
   const socialLinks = getProfileSocialLinksFromSources(

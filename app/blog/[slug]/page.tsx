@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { PostCommentsSection } from "@/components/blog/post-comments-section";
 import { PostReactionRail } from "@/components/blog/post-reaction-rail";
 import { PostViewTracker } from "@/components/blog/post-view-tracker";
 import {
@@ -158,6 +159,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               </div>
             )}
           </div>
+
+          <PostCommentsSection slug={slug} />
         </div>
 
         <div className="space-y-4 lg:sticky lg:top-28">

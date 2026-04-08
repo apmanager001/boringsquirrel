@@ -11,7 +11,7 @@ export function GameCard({ game }: GameCardProps) {
   return (
     <article className="card-surface group flex h-full flex-col overflow-hidden rounded-3xl">
       <Link href={`/games/${game.slug}`} className="flex h-full flex-col">
-        <div className="relative aspect-[16/10] overflow-hidden border-b border-base-300/15 bg-base-200/15">
+        <div className="relative aspect-16/10 overflow-hidden border-b border-base-300/15 bg-base-200/15">
           <Image
             src={game.heroImage}
             alt={game.name}

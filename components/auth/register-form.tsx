@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   useDeferredValue,
   useEffect,
@@ -37,6 +38,7 @@ export function RegisterForm({
   mailEnabled,
   callbackURL = "/settings",
 }: RegisterFormProps) {
+  const router = useRouter();
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
@@ -61,6 +63,7 @@ export function RegisterForm({
     callbackURL === "/settings"
       ? "/login"
       : `/login?callbackURL=${encodeURIComponent(callbackURL)}`;
+  const postRegisterRedirect = "/settings";
 
   const usernameFeedback = useMemo(() => {
     if (!authEnabled || !deferredUsername) {
@@ -208,7 +211,7 @@ export function RegisterForm({
         name: normalizedDisplayName,
         email: parsed.data.email.toLowerCase(),
         password: parsed.data.password,
-        callbackURL,
+        callbackURL: postRegisterRedirect,
       });
 
       if (result.error) {
@@ -219,9 +222,9 @@ export function RegisterForm({
 
       setSuccess(true);
       setPassword("");
-      setMessage(
-        `Account created for ${parsed.data.email.toLowerCase()}. Check your inbox to verify your email.`,
-      );
+      setMessage("Account created. Redirecting you to settings...");
+      router.push(postRegisterRedirect);
+      router.refresh();
     });
   }
 
@@ -365,9 +368,7 @@ export function RegisterForm({
             enabled={authEnabled && googleEnabled}
             callbackURL={callbackURL}
             label={
-              googleEnabled
-                ? "Start with Google"
-                : "Google sign-in disabled"
+              googleEnabled ? "Start with Google" : "Google sign-in disabled"
             }
           />
         </div>

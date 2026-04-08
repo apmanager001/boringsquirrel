@@ -22,6 +22,38 @@ export const loginSchema = z.object({
   rememberMe: z.boolean().optional(),
 });
 
+export const emailSchema = z
+  .string()
+  .trim()
+  .email("Enter a valid email address.");
+
+export const passwordSchema = z
+  .string()
+  .min(8, "Password must be at least 8 characters.")
+  .max(100, "Password must be 100 characters or fewer.")
+  .regex(/[a-zA-Z]/, "Include at least one letter.")
+  .regex(/[0-9]/, "Include at least one number.")
+  .regex(/[^a-zA-Z0-9]/, "Include at least one special character.");
+
+export const forgotPasswordSchema = z.object({
+  email: emailSchema,
+});
+
+export const resetPasswordSchema = z
+  .object({
+    password: passwordSchema,
+    confirmPassword: z.string().min(1, "Confirm your new password."),
+  })
+  .superRefine(({ password, confirmPassword }, context) => {
+    if (password !== confirmPassword) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["confirmPassword"],
+        message: "Passwords do not match.",
+      });
+    }
+  });
+
 export const registerSchema = z.object({
   username: usernameSchema,
   displayName: z
@@ -30,14 +62,8 @@ export const registerSchema = z.object({
     .max(40, "Display name must be 40 characters or fewer.")
     .optional()
     .or(z.literal("")),
-  email: z.string().trim().email("Enter a valid email address."),
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters.")
-    .max(100, "Password must be 100 characters or fewer.")
-    .regex(/[a-zA-Z]/, "Include at least one letter.")
-    .regex(/[0-9]/, "Include at least one number.")
-    .regex(/[^a-zA-Z0-9]/, "Include at least one special character."),
+  email: emailSchema,
+  password: passwordSchema,
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

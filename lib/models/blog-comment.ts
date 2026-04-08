@@ -1,19 +1,19 @@
 import { model, models, Schema } from "mongoose";
+import { BLOG_COMMENT_MAX_LENGTH } from "@/lib/blog-comment-schemas";
 
-const supportedGameSlugs = ["sudoku", "oilcap", "acornsweeper"] as const;
-
-const gameScoreSchema = new Schema(
+const blogCommentSchema = new Schema(
   {
-    gameSlug: {
+    slug: {
       type: String,
       required: true,
-      enum: supportedGameSlugs,
+      trim: true,
       index: true,
     },
     userId: {
       type: String,
       required: true,
       trim: true,
+      index: true,
     },
     username: {
       type: String,
@@ -25,14 +25,11 @@ const gameScoreSchema = new Schema(
       required: true,
       trim: true,
     },
-    score: {
-      type: Number,
+    body: {
+      type: String,
       required: true,
-      min: 0,
-    },
-    details: {
-      type: Schema.Types.Mixed,
-      default: {},
+      trim: true,
+      maxlength: BLOG_COMMENT_MAX_LENGTH,
     },
     isHidden: {
       type: Boolean,
@@ -45,8 +42,8 @@ const gameScoreSchema = new Schema(
   },
 );
 
-gameScoreSchema.index({ gameSlug: 1, userId: 1 }, { unique: true });
-gameScoreSchema.index({ gameSlug: 1, isHidden: 1, score: -1, updatedAt: 1 });
+blogCommentSchema.index({ slug: 1, isHidden: 1, createdAt: 1 });
+blogCommentSchema.index({ userId: 1, createdAt: -1 });
 
-export const GameScoreModel =
-  models.GameScore || model("GameScore", gameScoreSchema);
+export const BlogCommentModel =
+  models.BlogComment || model("BlogComment", blogCommentSchema);

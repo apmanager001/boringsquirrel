@@ -2,20 +2,33 @@ import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import {
   FileText,
+  Flag,
   Globe,
   Inbox,
   Mail,
-  PenLine,
   ShieldCheck,
-  Users,
+  UserRound,
 } from "lucide-react";
 import { redirect } from "next/navigation";
 import {
+  banReportedProfileUser,
   removeContactMessage,
+  removeReportedBlogComment,
+  updateBlogCommentReportReadState,
   updateContactMessageReadState,
+  updateProfileReportReadState,
 } from "@/app/admin/actions";
+import { CommentReportDeleteButton } from "@/components/admin/comment-report-delete-button";
+import { CommentReportReviewButton } from "@/components/admin/comment-report-review-button";
 import { ContactMessageDeleteButton } from "@/components/admin/contact-message-delete-button";
 import { ContactMessageReviewButton } from "@/components/admin/contact-message-review-button";
+import { ProfileReportBanButton } from "@/components/admin/profile-report-ban-button";
+import {
+  ADMIN_BLOG_COMMENT_REPORT_LIMIT,
+  getAdminBlogCommentReports,
+  normalizeAdminBlogCommentReportFilter,
+  type AdminBlogCommentReportFilter,
+} from "@/lib/blog-comments";
 import {
   getAuthSession,
   getRegisteredUserCount,
@@ -29,6 +42,12 @@ import {
   type AdminContactMessageFilter,
 } from "@/lib/contact";
 import { hasBetterAuthConfig } from "@/lib/env";
+import {
+  ADMIN_PROFILE_REPORT_LIMIT,
+  getAdminProfileReports,
+  normalizeAdminProfileReportFilter,
+  type AdminProfileReportFilter,
+} from "@/lib/profile-reports";
 import { buildMetadata } from "@/lib/site";
 
 export const metadata = buildMetadata({
@@ -42,10 +61,16 @@ export const dynamic = "force-dynamic";
 
 const adminLoginHref = `/login?callbackURL=${encodeURIComponent("/admin")}`;
 
-const adminInboxFilters = [
+const adminMessageFilters = [
   { label: "All messages", value: "all" },
   { label: "Unread", value: "unread" },
   { label: "Read", value: "read" },
+] as const;
+
+const adminCommentReportFilters = [
+  { label: "All reports", value: "all" },
+  { label: "Open", value: "open" },
+  { label: "Reviewed", value: "reviewed" },
 ] as const;
 
 const adminTimestampFormatter = new Intl.DateTimeFormat("en-US", {
@@ -66,46 +91,117 @@ type AdminPageProps = {
   }>;
 };
 
-type AdminPanelView = "blog" | "messages";
+type AdminPanelView = "blog" | "messages" | "reports" | "profile-reports";
 
 type AdminSummaryCardProps = {
   title: string;
-  value: string;
   icon: LucideIcon;
   iconClassName: string;
+  items: Array<{
+    label: string;
+    value: string;
+  }>;
 };
 
 type BlogInventoryListProps = {
   posts: BlogPostSummary[];
 };
 
-function getAdminFilterHref(filter: AdminContactMessageFilter) {
+function getAdminMessageFilterHref(filter: AdminContactMessageFilter) {
   return filter === "all"
     ? "/admin?view=messages"
     : `/admin?view=messages&filter=${encodeURIComponent(filter)}`;
 }
 
+function getAdminCommentReportFilterHref(filter: AdminBlogCommentReportFilter) {
+  return filter === "all"
+    ? "/admin?view=reports"
+    : `/admin?view=reports&filter=${encodeURIComponent(filter)}`;
+}
+
+function getAdminProfileReportFilterHref(filter: AdminProfileReportFilter) {
+  return filter === "all"
+    ? "/admin?view=profile-reports"
+    : `/admin?view=profile-reports&filter=${encodeURIComponent(filter)}`;
+}
+
 function normalizeAdminPanelView(
   value: string | string[] | undefined,
 ): AdminPanelView {
-  return (Array.isArray(value) ? value[0] : value) === "blog"
-    ? "blog"
-    : "messages";
+  const normalizedValue = Array.isArray(value) ? value[0] : value;
+
+  if (normalizedValue === "blog") {
+    return "blog";
+  }
+
+  if (normalizedValue === "reports") {
+    return "reports";
+  }
+
+  if (normalizedValue === "profile-reports") {
+    return "profile-reports";
+  }
+
+  return "messages";
 }
 
 function getAdminViewHref(
   view: AdminPanelView,
-  filter: AdminContactMessageFilter,
+  messageFilter: AdminContactMessageFilter,
+  reportFilter: AdminBlogCommentReportFilter,
+  profileReportFilter: AdminProfileReportFilter,
 ) {
   if (view === "blog") {
     return "/admin?view=blog";
   }
 
-  return getAdminFilterHref(filter);
+  if (view === "profile-reports") {
+    return getAdminProfileReportFilterHref(profileReportFilter);
+  }
+
+  if (view === "reports") {
+    return getAdminCommentReportFilterHref(reportFilter);
+  }
+
+  return getAdminMessageFilterHref(messageFilter);
 }
 
 function getAdminMessageViewLabel(filter: AdminContactMessageFilter) {
   return filter === "all" ? "inbox" : `${filter} filter`;
+}
+
+function getAdminCommentReportViewLabel(filter: AdminBlogCommentReportFilter) {
+  if (filter === "all") {
+    return "report queue";
+  }
+
+  return filter === "open" ? "open reports" : "reviewed reports";
+}
+
+function getAdminProfileReportViewLabel(filter: AdminProfileReportFilter) {
+  if (filter === "all") {
+    return "profile report queue";
+  }
+
+  return filter === "open"
+    ? "open profile reports"
+    : "reviewed profile reports";
+}
+
+function getAdminProfileHandleEntries(socialLinks: {
+  steamHandle: string;
+  discordHandle: string;
+  xboxHandle: string;
+  playstationHandle: string;
+  twitchHandle: string;
+}) {
+  return [
+    { label: "Steam", value: socialLinks.steamHandle },
+    { label: "Discord", value: socialLinks.discordHandle },
+    { label: "Xbox", value: socialLinks.xboxHandle },
+    { label: "PlayStation", value: socialLinks.playstationHandle },
+    { label: "Twitch", value: socialLinks.twitchHandle },
+  ].filter((entry) => entry.value.length > 0);
 }
 
 function formatAdminDate(input: string) {
@@ -122,12 +218,12 @@ function formatAdminNumber(value: number) {
 
 function AdminSummaryCard({
   title,
-  value,
   icon: Icon,
   iconClassName,
+  items,
 }: AdminSummaryCardProps) {
   return (
-    <div className="block card-surface rounded-3xl p-4 sm:rounded-4xl sm:p-5">
+    <div className="block card-surface rounded-3xl p-4 sm:rounded-4xl sm:p-6">
       <div className="flex items-center gap-2 sm:gap-3">
         <span className="flex size-9 items-center justify-center rounded-2xl border border-base-300/12 bg-white/65 sm:size-11">
           <Icon className={`size-4 sm:size-5 ${iconClassName}`} />
@@ -136,9 +232,21 @@ function AdminSummaryCard({
           {title}
         </p>
       </div>
-      <p className="display-font mt-3 text-3xl font-semibold text-base-content sm:mt-4 sm:text-4xl">
-        {value}
-      </p>
+      <div className="mt-3 space-y-3 sm:mt-4">
+        {items.map((item) => (
+          <div
+            key={item.label}
+            className="flex items-end justify-between gap-4 border-b border-base-300/10 pb-3 last:border-b-0 last:pb-0"
+          >
+            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-base-content/50">
+              {item.label}
+            </span>
+            <span className="display-font text-3xl font-semibold text-base-content sm:text-4xl">
+              {item.value}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -271,21 +379,36 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
   const params = await searchParams;
   const panelView = normalizeAdminPanelView(params.view);
-  const filter = normalizeAdminContactFilter(
-    typeof params.filter === "string" ? params.filter : undefined,
-  );
-  const [resolvedInbox, resolvedBlogPosts, registeredUserCount] =
-    await Promise.all([
-    getAdminContactInbox(filter),
+  const rawFilter =
+    typeof params.filter === "string" ? params.filter : undefined;
+  const messageFilter = normalizeAdminContactFilter(rawFilter);
+  const reportFilter = normalizeAdminBlogCommentReportFilter(rawFilter);
+  const profileReportFilter = normalizeAdminProfileReportFilter(rawFilter);
+  const [
+    resolvedInbox,
+    resolvedBlogPosts,
+    registeredUserCount,
+    resolvedCommentReports,
+    resolvedProfileReports,
+  ] = await Promise.all([
+    getAdminContactInbox(messageFilter),
     getAllBlogPostsForAdmin(),
     getRegisteredUserCount(),
-    ]);
+    getAdminBlogCommentReports(reportFilter),
+    getAdminProfileReports(profileReportFilter),
+  ]);
 
   const livePosts = resolvedBlogPosts.filter((post) => !post.draft);
   const draftPosts = resolvedBlogPosts.filter((post) => post.draft);
   const visibleMessageCount = resolvedInbox.messages.length;
   const showingAllFetchedMessages =
     visibleMessageCount >= resolvedInbox.filteredCount;
+  const visibleReportCount = resolvedCommentReports.reports.length;
+  const showingAllFetchedReports =
+    visibleReportCount >= resolvedCommentReports.filteredCount;
+  const visibleProfileReportCount = resolvedProfileReports.reports.length;
+  const showingAllFetchedProfileReports =
+    visibleProfileReportCount >= resolvedProfileReports.filteredCount;
   const livePostShare =
     resolvedBlogPosts.length === 0
       ? 0
@@ -294,7 +417,10 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     resolvedBlogPosts.length === 0
       ? 0
       : (draftPosts.length / resolvedBlogPosts.length) * 100;
-  const messageViewLabel = getAdminMessageViewLabel(filter);
+  const messageViewLabel = getAdminMessageViewLabel(messageFilter);
+  const reportViewLabel = getAdminCommentReportViewLabel(reportFilter);
+  const profileReportViewLabel =
+    getAdminProfileReportViewLabel(profileReportFilter);
 
   return (
     <main className="page-shell py-14 sm:py-20">
@@ -305,48 +431,73 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             Admin Panel
           </h1>
           <p className="max-w-3xl text-lg leading-8 text-base-content/80">
-            Track what is live, what is still in draft, and which contact
-            messages still need a response.
+            Track what is live, what is still in draft, which contact messages
+            still need a response, which blog comments were flagged for review,
+            and which player profiles were reported for moderation.
           </p>
         </div>
       </section>
 
-      <section className="mt-10 grid grid-cols-2 gap-3 min-[560px]:grid-cols-3 sm:gap-4 xl:grid-cols-6">
+      <section className="mt-10 grid grid-cols-1 gap-3 min-[560px]:grid-cols-2 sm:gap-4 xl:grid-cols-4">
         <AdminSummaryCard
-          title="Total posts"
-          value={formatAdminNumber(resolvedBlogPosts.length)}
+          title="Posts and users"
           icon={FileText}
           iconClassName="text-base-content"
+          items={[
+            {
+              label: "All Posts",
+              value: formatAdminNumber(resolvedBlogPosts.length),
+            },
+            {
+              label: "Users",
+              value: formatAdminNumber(registeredUserCount),
+            },
+          ]}
         />
         <AdminSummaryCard
-          title="Live posts"
-          value={formatAdminNumber(livePosts.length)}
+          title="Posts"
           icon={Globe}
           iconClassName="text-success"
+          items={[
+            {
+              label: "Live",
+              value: formatAdminNumber(livePosts.length),
+            },
+            {
+              label: "Draft",
+              value: formatAdminNumber(draftPosts.length),
+            },
+          ]}
         />
         <AdminSummaryCard
-          title="Draft posts"
-          value={formatAdminNumber(draftPosts.length)}
-          icon={PenLine}
-          iconClassName="text-warning"
-        />
-        <AdminSummaryCard
-          title="Inbox total"
-          value={formatAdminNumber(resolvedInbox.totalCount)}
+          title="Inbox"
           icon={Inbox}
           iconClassName="text-primary"
+          items={[
+            {
+              label: "Total",
+              value: formatAdminNumber(resolvedInbox.totalCount),
+            },
+            {
+              label: "Unread",
+              value: formatAdminNumber(resolvedInbox.unreadCount),
+            },
+          ]}
         />
         <AdminSummaryCard
-          title="Unread"
-          value={formatAdminNumber(resolvedInbox.unreadCount)}
-          icon={Mail}
-          iconClassName="text-secondary"
-        />
-        <AdminSummaryCard
-          title="Users"
-          value={formatAdminNumber(registeredUserCount)}
-          icon={Users}
-          iconClassName="text-info"
+          title="Open reports"
+          icon={Flag}
+          iconClassName="text-warning"
+          items={[
+            {
+              label: "Comments",
+              value: formatAdminNumber(resolvedCommentReports.openCount),
+            },
+            {
+              label: "Profiles",
+              value: formatAdminNumber(resolvedProfileReports.openCount),
+            },
+          ]}
         />
       </section>
 
@@ -354,6 +505,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         {[
           { label: "Blog inventory", value: "blog" as const, icon: FileText },
           { label: "Message review", value: "messages" as const, icon: Inbox },
+          { label: "Comment reports", value: "reports" as const, icon: Flag },
+          {
+            label: "Profile reports",
+            value: "profile-reports" as const,
+            icon: UserRound,
+          },
         ].map((option) => {
           const isActive = panelView === option.value;
           const Icon = option.icon;
@@ -361,7 +518,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           return (
             <Link
               key={option.value}
-              href={getAdminViewHref(option.value, filter)}
+              href={getAdminViewHref(
+                option.value,
+                messageFilter,
+                reportFilter,
+                profileReportFilter,
+              )}
               className={`btn rounded-full px-5 ${
                 isActive ? "btn-primary" : "btn-ghost"
               }`}
@@ -475,7 +637,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                 <BlogInventoryList posts={resolvedBlogPosts} />
               </div>
             </div>
-          ) : (
+          ) : panelView === "messages" ? (
             <>
               <div className="card-surface rounded-4xl p-6">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -486,13 +648,13 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                     </h2>
                   </div>
                   <div className="flex flex-wrap gap-3">
-                    {adminInboxFilters.map((option) => {
-                      const isActive = filter === option.value;
+                    {adminMessageFilters.map((option) => {
+                      const isActive = messageFilter === option.value;
 
                       return (
                         <Link
                           key={option.value}
-                          href={getAdminFilterHref(option.value)}
+                          href={getAdminMessageFilterHref(option.value)}
                           className={`btn rounded-full px-5 ${
                             isActive ? "btn-primary" : "btn-ghost"
                           }`}
@@ -520,9 +682,9 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                 </div>
               ) : resolvedInbox.messages.length === 0 ? (
                 <div className="card-surface rounded-4xl p-6 text-sm leading-7 text-base-content/78">
-                  {filter === "unread"
+                  {messageFilter === "unread"
                     ? "No unread contact messages are waiting for review."
-                    : filter === "read"
+                    : messageFilter === "read"
                       ? "No contact messages have been marked as read yet."
                       : "No contact messages have been submitted yet."}
                 </div>
@@ -584,7 +746,11 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                               name="messageId"
                               value={message.id}
                             />
-                            <input type="hidden" name="filter" value={filter} />
+                            <input
+                              type="hidden"
+                              name="filter"
+                              value={messageFilter}
+                            />
                             <input
                               type="hidden"
                               name="nextReadState"
@@ -600,7 +766,11 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                               name="messageId"
                               value={message.id}
                             />
-                            <input type="hidden" name="filter" value={filter} />
+                            <input
+                              type="hidden"
+                              name="filter"
+                              value={messageFilter}
+                            />
                             <ContactMessageDeleteButton />
                           </form>
                         </div>
@@ -624,6 +794,449 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                   {formatAdminNumber(resolvedInbox.filteredCount)} messages. If
                   you want pagination, archive states, or search next, that can
                   slot into this screen cleanly.
+                </div>
+              ) : null}
+            </>
+          ) : panelView === "profile-reports" ? (
+            <>
+              <div className="card-surface rounded-4xl p-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div>
+                    <p className="section-kicker before:w-5">
+                      Profile moderation
+                    </p>
+                    <h2 className="display-font mt-3 text-3xl font-semibold">
+                      Reported profiles
+                    </h2>
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    {adminCommentReportFilters.map((option) => {
+                      const isActive = profileReportFilter === option.value;
+
+                      return (
+                        <Link
+                          key={option.value}
+                          href={getAdminProfileReportFilterHref(option.value)}
+                          className={`btn rounded-full px-5 ${
+                            isActive ? "btn-primary" : "btn-ghost"
+                          }`}
+                        >
+                          {option.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <p className="mt-4 text-sm leading-7 text-base-content/75">
+                  {!resolvedProfileReports.available
+                    ? "Profile report data is unavailable because the database connection is not ready in this environment."
+                    : showingAllFetchedProfileReports
+                      ? `Showing all ${formatAdminNumber(resolvedProfileReports.filteredCount)} ${resolvedProfileReports.filteredCount === 1 ? "report" : "reports"} in the ${profileReportViewLabel}.`
+                      : `Showing the latest ${formatAdminNumber(visibleProfileReportCount)} of ${formatAdminNumber(resolvedProfileReports.filteredCount)} ${resolvedProfileReports.filteredCount === 1 ? "report" : "reports"} in the ${profileReportViewLabel}.`}
+                </p>
+              </div>
+
+              {!resolvedProfileReports.available ? (
+                <div className="card-surface rounded-4xl p-6 text-sm leading-7 text-base-content/78">
+                  Profile report data is unavailable because the database
+                  connection is not ready in this environment.
+                </div>
+              ) : resolvedProfileReports.reports.length === 0 ? (
+                <div className="card-surface rounded-4xl p-6 text-sm leading-7 text-base-content/78">
+                  {profileReportFilter === "open"
+                    ? "No open profile reports are waiting for review."
+                    : profileReportFilter === "reviewed"
+                      ? "No profile reports have been marked as reviewed yet."
+                      : "No public profiles have been reported yet."}
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {resolvedProfileReports.reports.map((report) => {
+                    const reportedUserLabel =
+                      report.reportedDisplayName.toLowerCase() !==
+                      report.reportedUsername.toLowerCase()
+                        ? `${report.reportedDisplayName} (@${report.reportedUsername})`
+                        : `@${report.reportedUsername}`;
+                    const reporterLabel =
+                      report.reporterDisplayName.toLowerCase() !==
+                      report.reporterUsername.toLowerCase()
+                        ? `${report.reporterDisplayName} (@${report.reporterUsername})`
+                        : `@${report.reporterUsername}`;
+                    const handleEntries = getAdminProfileHandleEntries(
+                      report.reportedSocialLinks,
+                    );
+                    const profileHref = `/profile/${encodeURIComponent(report.reportedUserId)}`;
+
+                    return (
+                      <article
+                        key={report.id}
+                        className={`card-surface rounded-4xl border p-6 ${
+                          report.isRead
+                            ? "border-base-300/12 bg-white/40"
+                            : "border-warning/18 bg-warning/6"
+                        }`}
+                      >
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                          <div className="space-y-3">
+                            <div className="flex flex-wrap items-center gap-3">
+                              <span
+                                className={`badge badge-sm px-3 py-3 font-semibold uppercase tracking-[0.16em] ${
+                                  report.isRead
+                                    ? "badge-ghost"
+                                    : "badge-warning"
+                                }`}
+                              >
+                                {report.isRead ? "Reviewed" : "Open"}
+                              </span>
+                              <span className="text-xs uppercase tracking-[0.2em] text-base-content/45">
+                                Reported{" "}
+                                {formatAdminTimestamp(report.createdAt)}
+                              </span>
+                              {report.readAt ? (
+                                <span className="text-xs uppercase tracking-[0.2em] text-base-content/45">
+                                  Reviewed {formatAdminTimestamp(report.readAt)}
+                                </span>
+                              ) : null}
+                            </div>
+
+                            <div>
+                              <p className="section-kicker before:w-5">
+                                Profile
+                              </p>
+                              <h3 className="display-font mt-3 text-3xl font-semibold text-base-content">
+                                {reportedUserLabel}
+                              </h3>
+                              <p className="mt-2 text-sm leading-7 text-base-content/80">
+                                {report.reportedUserExists
+                                  ? report.reportedUserIsBanned
+                                    ? "Account is already banned and public content is hidden."
+                                    : "Live profile currently visible at "
+                                  : "Account no longer exists in auth storage."}
+                                {report.reportedUserExists &&
+                                !report.reportedUserIsBanned ? (
+                                  <Link
+                                    href={profileHref}
+                                    className="font-semibold text-primary hover:text-primary/80"
+                                  >
+                                    {profileHref}
+                                  </Link>
+                                ) : null}
+                              </p>
+                              <p className="mt-1 text-sm leading-7 text-base-content/72">
+                                Reported by {reporterLabel}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap gap-3">
+                            {report.reportedUserExists &&
+                            !report.reportedUserIsBanned ? (
+                              <Link
+                                href={profileHref}
+                                className="btn btn-secondary rounded-full px-5"
+                              >
+                                <UserRound className="size-4" />
+                                View profile
+                              </Link>
+                            ) : (
+                              <span className="btn btn-ghost rounded-full px-5">
+                                <UserRound className="size-4" />
+                                Profile hidden
+                              </span>
+                            )}
+                            <form action={updateProfileReportReadState}>
+                              <input
+                                type="hidden"
+                                name="reportId"
+                                value={report.id}
+                              />
+                              <input
+                                type="hidden"
+                                name="filter"
+                                value={profileReportFilter}
+                              />
+                              <input
+                                type="hidden"
+                                name="nextReadState"
+                                value={report.isRead ? "open" : "reviewed"}
+                              />
+                              <CommentReportReviewButton
+                                nextReadState={
+                                  report.isRead ? "open" : "reviewed"
+                                }
+                              />
+                            </form>
+                            <form action={banReportedProfileUser}>
+                              <input
+                                type="hidden"
+                                name="reportedUserId"
+                                value={report.reportedUserId}
+                              />
+                              <input
+                                type="hidden"
+                                name="filter"
+                                value={profileReportFilter}
+                              />
+                              <ProfileReportBanButton
+                                alreadyBanned={report.reportedUserIsBanned}
+                              />
+                            </form>
+                          </div>
+                        </div>
+
+                        <div className="mt-5 rounded-3xl border border-base-300/12 bg-white/55 p-4">
+                          <div className="space-y-3 text-sm leading-7 text-base-content/82">
+                            <div className="flex items-center justify-between gap-4">
+                              <span>Username</span>
+                              <span className="font-semibold text-base-content">
+                                {report.reportedUsername}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between gap-4">
+                              <span>Display name</span>
+                              <span className="font-semibold text-base-content">
+                                {report.reportedDisplayName}
+                              </span>
+                            </div>
+                            {handleEntries.length === 0 ? (
+                              <p className="text-base-content/72">
+                                No shared social handles were saved when this
+                                report was submitted.
+                              </p>
+                            ) : (
+                              <div className="flex flex-wrap gap-2 pt-1">
+                                {handleEntries.map((entry) => (
+                                  <span
+                                    key={entry.label}
+                                    className="rounded-full border border-base-300/15 bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-base-content/72"
+                                  >
+                                    {entry.label}: {entry.value}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+
+              {resolvedProfileReports.available &&
+              resolvedProfileReports.filteredCount >
+                ADMIN_PROFILE_REPORT_LIMIT ? (
+                <div className="rounded-3xl border border-base-300/12 bg-white/45 px-5 py-4 text-sm leading-7 text-base-content/75">
+                  The {profileReportViewLabel} currently shows the latest{" "}
+                  {ADMIN_PROFILE_REPORT_LIMIT} of{" "}
+                  {formatAdminNumber(resolvedProfileReports.filteredCount)}{" "}
+                  reports. If you want pagination or moderator notes next, that
+                  can slot into this screen cleanly.
+                </div>
+              ) : null}
+            </>
+          ) : (
+            <>
+              <div className="card-surface rounded-4xl p-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div>
+                    <p className="section-kicker before:w-5">
+                      Comment moderation
+                    </p>
+                    <h2 className="display-font mt-3 text-3xl font-semibold">
+                      Reported comments
+                    </h2>
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    {adminCommentReportFilters.map((option) => {
+                      const isActive = reportFilter === option.value;
+
+                      return (
+                        <Link
+                          key={option.value}
+                          href={getAdminCommentReportFilterHref(option.value)}
+                          className={`btn rounded-full px-5 ${
+                            isActive ? "btn-primary" : "btn-ghost"
+                          }`}
+                        >
+                          {option.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <p className="mt-4 text-sm leading-7 text-base-content/75">
+                  {!resolvedCommentReports.available
+                    ? "Comment report data is unavailable because the database connection is not ready in this environment."
+                    : showingAllFetchedReports
+                      ? `Showing all ${formatAdminNumber(resolvedCommentReports.filteredCount)} ${resolvedCommentReports.filteredCount === 1 ? "report" : "reports"} in the ${reportViewLabel}.`
+                      : `Showing the latest ${formatAdminNumber(visibleReportCount)} of ${formatAdminNumber(resolvedCommentReports.filteredCount)} ${resolvedCommentReports.filteredCount === 1 ? "report" : "reports"} in the ${reportViewLabel}.`}
+                </p>
+              </div>
+
+              {!resolvedCommentReports.available ? (
+                <div className="card-surface rounded-4xl p-6 text-sm leading-7 text-base-content/78">
+                  Comment report data is unavailable because the database
+                  connection is not ready in this environment.
+                </div>
+              ) : resolvedCommentReports.reports.length === 0 ? (
+                <div className="card-surface rounded-4xl p-6 text-sm leading-7 text-base-content/78">
+                  {reportFilter === "open"
+                    ? "No open comment reports are waiting for review."
+                    : reportFilter === "reviewed"
+                      ? "No comment reports have been marked as reviewed yet."
+                      : "No blog comments have been reported yet."}
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {resolvedCommentReports.reports.map((report) => {
+                    const commentAuthorLabel =
+                      report.commentAuthorDisplayName.toLowerCase() !==
+                      report.commentAuthorUsername.toLowerCase()
+                        ? `${report.commentAuthorDisplayName} (@${report.commentAuthorUsername})`
+                        : `@${report.commentAuthorUsername}`;
+                    const reporterLabel =
+                      report.reporterDisplayName.toLowerCase() !==
+                      report.reporterUsername.toLowerCase()
+                        ? `${report.reporterDisplayName} (@${report.reporterUsername})`
+                        : `@${report.reporterUsername}`;
+                    const commentHref = report.commentExists
+                      ? `/blog/${report.slug}#comment-${report.commentId}`
+                      : `/blog/${report.slug}`;
+
+                    return (
+                      <article
+                        key={report.id}
+                        className={`card-surface rounded-4xl border p-6 ${
+                          report.isRead
+                            ? "border-base-300/12 bg-white/40"
+                            : "border-warning/18 bg-warning/6"
+                        }`}
+                      >
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                          <div className="space-y-3">
+                            <div className="flex flex-wrap items-center gap-3">
+                              <span
+                                className={`badge badge-sm px-3 py-3 font-semibold uppercase tracking-[0.16em] ${
+                                  report.isRead
+                                    ? "badge-ghost"
+                                    : "badge-warning"
+                                }`}
+                              >
+                                {report.isRead ? "Reviewed" : "Open"}
+                              </span>
+                              <span className="text-xs uppercase tracking-[0.2em] text-base-content/45">
+                                Reported{" "}
+                                {formatAdminTimestamp(report.createdAt)}
+                              </span>
+                              {report.readAt ? (
+                                <span className="text-xs uppercase tracking-[0.2em] text-base-content/45">
+                                  Reviewed {formatAdminTimestamp(report.readAt)}
+                                </span>
+                              ) : null}
+                            </div>
+
+                            <div>
+                              <p className="section-kicker before:w-5">
+                                Comment
+                              </p>
+                              <h3 className="display-font mt-3 text-3xl font-semibold text-base-content">
+                                {commentAuthorLabel}
+                              </h3>
+                              <p className="mt-2 text-sm leading-7 text-base-content/80">
+                                {report.commentExists
+                                  ? "Live comment on "
+                                  : "Comment was removed from "}
+                                <Link
+                                  href={commentHref}
+                                  className="font-semibold text-primary hover:text-primary/80"
+                                >
+                                  {`/blog/${report.slug}`}
+                                </Link>
+                              </p>
+                              <p className="mt-1 text-sm leading-7 text-base-content/72">
+                                Reported by {reporterLabel}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap gap-3">
+                            <Link
+                              href={commentHref}
+                              className="btn btn-secondary rounded-full px-5"
+                            >
+                              <Flag className="size-4" />
+                              {report.commentExists
+                                ? "View comment"
+                                : "View post"}
+                            </Link>
+                            <form action={updateBlogCommentReportReadState}>
+                              <input
+                                type="hidden"
+                                name="reportId"
+                                value={report.id}
+                              />
+                              <input
+                                type="hidden"
+                                name="filter"
+                                value={reportFilter}
+                              />
+                              <input
+                                type="hidden"
+                                name="nextReadState"
+                                value={report.isRead ? "open" : "reviewed"}
+                              />
+                              <CommentReportReviewButton
+                                nextReadState={
+                                  report.isRead ? "open" : "reviewed"
+                                }
+                              />
+                            </form>
+                            <form action={removeReportedBlogComment}>
+                              <input
+                                type="hidden"
+                                name="commentId"
+                                value={report.commentId}
+                              />
+                              <input
+                                type="hidden"
+                                name="commentSlug"
+                                value={report.slug}
+                              />
+                              <input
+                                type="hidden"
+                                name="filter"
+                                value={reportFilter}
+                              />
+                              <CommentReportDeleteButton
+                                commentExists={report.commentExists}
+                              />
+                            </form>
+                          </div>
+                        </div>
+
+                        <div className="mt-5 rounded-3xl border border-base-300/12 bg-white/55 p-4">
+                          <p className="wrap-break-word whitespace-pre-wrap text-sm leading-7 text-base-content/82">
+                            {report.commentBody}
+                          </p>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+
+              {resolvedCommentReports.available &&
+              resolvedCommentReports.filteredCount >
+                ADMIN_BLOG_COMMENT_REPORT_LIMIT ? (
+                <div className="rounded-3xl border border-base-300/12 bg-white/45 px-5 py-4 text-sm leading-7 text-base-content/75">
+                  The {reportViewLabel} currently shows the latest{" "}
+                  {ADMIN_BLOG_COMMENT_REPORT_LIMIT} of{" "}
+                  {formatAdminNumber(resolvedCommentReports.filteredCount)}{" "}
+                  reports. If you want pagination or moderator notes next, that
+                  can slot into this screen cleanly.
                 </div>
               ) : null}
             </>

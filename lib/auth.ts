@@ -3,6 +3,7 @@ import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { nextCookies } from "better-auth/next-js";
 import { admin, username } from "better-auth/plugins";
+import { renderResetPasswordEmail } from "@/emails/reset-password";
 import { renderVerifyEmail } from "@/emails/verify-email";
 import {
   connectMongoClient,
@@ -62,11 +63,34 @@ export const auth =
         }),
         emailAndPassword: {
           enabled: true,
-          requireEmailVerification: true,
+          requireEmailVerification: false,
+          revokeSessionsOnPasswordReset: true,
+          sendResetPassword: async ({ user, url }) => {
+            if (!hasMailConfig()) {
+              throw new Error("Password reset email is not configured yet.");
+            }
+
+            const payload = renderResetPasswordEmail({
+              name: user.name || user.email,
+              resetUrl: url,
+            });
+
+            const delivery = await sendMail({
+              from: env.verifyFrom,
+              to: user.email,
+              subject: payload.subject,
+              html: payload.html,
+              text: `Reset your password by visiting ${url}`,
+            });
+
+            if (!delivery) {
+              throw new Error("Failed to send the password reset email.");
+            }
+          },
         },
         emailVerification: {
           sendOnSignUp: true,
-          sendOnSignIn: true,
+          sendOnSignIn: false,
           autoSignInAfterVerification: true,
           sendVerificationEmail: async ({ user, url }) => {
             if (!hasMailConfig()) {

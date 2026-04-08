@@ -52,6 +52,20 @@ export function LoginForm({
     callbackURL === "/settings"
       ? "/register"
       : `/register?callbackURL=${encodeURIComponent(callbackURL)}`;
+  const forgotPasswordQuery = new URLSearchParams();
+
+  if (callbackURL !== "/settings") {
+    forgotPasswordQuery.set("callbackURL", callbackURL);
+  }
+
+  if (identifier.trim().includes("@")) {
+    forgotPasswordQuery.set("email", identifier.trim().toLowerCase());
+  }
+
+  const forgotPasswordHref =
+    forgotPasswordQuery.size > 0
+      ? `/forgot-password?${forgotPasswordQuery.toString()}`
+      : "/forgot-password";
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -151,13 +165,14 @@ export function LoginForm({
           Sign into your account
         </h2>
         <p className="text-sm leading-7 text-base-content/75">
-          Use your email or username. 
+          Use your email or username.
         </p>
       </div>
 
       {!authEnabled ? (
         <div className="mt-5 rounded-[1.4rem] bg-warning/80 px-4 py-3 text-sm leading-7 text-warning-content">
-          We are having server issues. Please try signing in again later. If the problem persists, contact support.
+          We are having server issues. Please try signing in again later. If the
+          problem persists, contact support.
         </div>
       ) : null}
 
@@ -179,10 +194,21 @@ export function LoginForm({
           ) : null}
         </label>
 
-        <label htmlFor="password" className="grid gap-2">
-          <span className="text-sm font-semibold text-base-content/75">
-            Password
-          </span>
+        <div className="grid gap-2">
+          <div className="flex items-center justify-between gap-3">
+            <label
+              htmlFor="password"
+              className="text-sm font-semibold text-base-content/75"
+            >
+              Password
+            </label>
+            <Link
+              href={forgotPasswordHref}
+              className="text-xs font-semibold uppercase tracking-[0.18em] text-primary hover:text-primary/80"
+            >
+              Forgot password?
+            </Link>
+          </div>
           <input
             id="password"
             value={password}
@@ -195,7 +221,7 @@ export function LoginForm({
           {fieldErrors.password ? (
             <span className="text-sm text-error">{fieldErrors.password}</span>
           ) : null}
-        </label>
+        </div>
 
         <label className="inline-flex items-center gap-3 text-sm text-base-content/75">
           <input

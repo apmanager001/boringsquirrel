@@ -2,11 +2,12 @@ import { redirect } from "next/navigation";
 import { BellDot, MailCheck, UserRound, Heart } from "lucide-react";
 import Link from "next/link";
 import { getAuthSession, getSessionIdentityFromUnknown } from "@/lib/auth";
-import { hasBetterAuthConfig } from "@/lib/env";
+import { hasBetterAuthConfig, hasMailConfig } from "@/lib/env";
 import { getUserLikedPostCount } from "@/lib/blog-likes";
 import { getUserProfileSocialLinks } from "@/lib/profiles";
 import { buildMetadata } from "@/lib/site";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { ResendVerificationEmailButton } from "@/components/settings/resend-verification-email-button";
 import { ProfileSocialLinksForm } from "@/components/settings/profile-social-links-form";
 import { ProfileUsernameForm } from "@/components/settings/profile-username-form";
 import Image from "next/image";
@@ -46,9 +47,6 @@ export default async function SettingsPage() {
   if (!identity) {
     redirect("/login");
   }
-  if (!identity.isAdmin) {
-      redirect("/settings");
-  }
   const [likedPostCount, socialLinks] = await Promise.all([
     getUserLikedPostCount(identity.userId),
     getUserProfileSocialLinks(identity.userId),
@@ -62,11 +60,14 @@ export default async function SettingsPage() {
       <section className="space-y-6">
         <div className="flex items-center justify-between">
           <p className="section-kicker">Settings</p>
-          <div>
-            <Link href='/admin' className='btn btn-secondary mr-4'>Admin</Link>
+          <div className="flex items-center gap-4">
+            {identity.isAdmin ? (
+              <Link href="/admin" className="btn btn-secondary">
+                Admin
+              </Link>
+            ) : null}
             <SignOutButton />
           </div>
-          
         </div>
         <h1 className="display-font text-5xl font-bold leading-[0.96] text-base-content sm:text-6xl">
           Account preferences
@@ -86,16 +87,17 @@ export default async function SettingsPage() {
               href={`/profile/${identity.userId}`}
               className="inline-flex flex-col items-center gap-2 mt-4 text-sm font-medium text-primary hover:text-primary/80"
             >
-              <Image
-                src={session.user.image || "/default-avatar.png"}
-                alt="User avatar"
-                width={48}
-                height={48}
-                className="rounded-full border border-base-300/20 bg-white/50 object-cover"
-              />
-                <span className="text-xs">View public profile</span>
+              {session.user.image && (
+                <Image
+                  src={session.user.image || "/default-avatar.png"}
+                  alt="User avatar"
+                  width={48}
+                  height={48}
+                  className="rounded-full border border-base-300/20 bg-white/50 object-cover"
+                />
+              )}
+              <span className="text-xs">View public profile</span>
             </Link>
-        
           </div>
           <ProfileUsernameForm username={username} displayName={displayName} />
         </div>
@@ -110,6 +112,23 @@ export default async function SettingsPage() {
             {session.user.email} is{" "}
             {session.user.emailVerified ? "verified" : "not verified yet"}.
           </p>
+          {!session.user.emailVerified ? (
+            <>
+              <p className="mt-3 text-sm leading-7 text-base-content/78">
+                Verify your email to save scores and like blog posts.
+              </p>
+              <span className="text-xs text-base-content/60">
+                {"(If you don't receive the email, check your spam folder)"}
+              </span>
+              {hasMailConfig() ? (
+                <ResendVerificationEmailButton email={session.user.email} />
+              ) : (
+                <p className="mt-4 text-sm leading-7 text-base-content/78">
+                  Verification email delivery is not configured right now.
+                </p>
+              )}
+            </>
+          ) : null}
         </div>
         <div className="card-surface rounded-[1.6rem] p-6 lg:col-span-2">
           <div className="flex items-center gap-3">
@@ -135,13 +154,17 @@ export default async function SettingsPage() {
           <div className="card-surface rounded-[1.8rem] p-6">
             <div className="flex items-center gap-3">
               <Heart className="size-5 text-accent" />
-              <h2 className="display-font text-2xl font-semibold">Blog likes</h2>
+              <h2 className="display-font text-2xl font-semibold">
+                Blog likes
+              </h2>
             </div>
             <p className="display-font mt-4 text-5xl font-semibold text-base-content">
               {likedPostCount}
             </p>
             <p className="mt-3 text-sm leading-7 text-base-content/78">
-            Thank you for liking {likedPostCount === 1 ? "a post" : `${likedPostCount} posts`}! Your support helps us keep the content coming.
+              Thank you for liking{" "}
+              {likedPostCount === 1 ? "a post" : `${likedPostCount} posts`}!
+              Your support helps us keep the content coming.
             </p>
           </div>
         )}

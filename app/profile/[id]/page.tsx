@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { BadgeCheck, Trophy, UserRound } from "lucide-react";
+import { ProfileReportFlag } from "@/components/profile/profile-report-flag";
 import { ProfileSocialHandles } from "@/components/profile/profile-social-handles";
 import { formatGameScoreDetails } from "@/lib/games/score-formatting";
 import { getPublicProfileById } from "@/lib/profiles";
@@ -203,6 +204,8 @@ export default async function PublicProfilePage({
               <ProfileSocialHandles accounts={sharedAccounts} />
             </div>
           ) : null}
+
+          <ProfileReportFlag userId={profile.userId} />
 
           <div className="card-surface rounded-[1.8rem] p-6">
             <p className="section-kicker before:w-6">Next moves</p>

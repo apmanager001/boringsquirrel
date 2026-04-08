@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
+import { syncStoredBlogCommentIdentity } from "@/lib/blog-comments";
 import { syncStoredBlogLikeIdentity } from "@/lib/blog-likes";
 import { syncStoredGameScoreIdentity } from "@/lib/game-scores";
 import {
@@ -139,7 +140,7 @@ export async function saveProfileUsername(
     };
   }
 
-  const [scoresSynced, likesSynced] = await Promise.all([
+  const [scoresSynced, likesSynced, commentsSynced] = await Promise.all([
     syncStoredGameScoreIdentity({
       userId: identity.userId,
       username: nextUsername,
@@ -150,9 +151,15 @@ export async function saveProfileUsername(
       username: nextUsername,
       displayName: nextDisplayName,
     }),
+    syncStoredBlogCommentIdentity({
+      userId: identity.userId,
+      username: nextUsername,
+      displayName: nextDisplayName,
+    }),
   ]);
 
   revalidatePath("/");
+  revalidatePath("/admin");
   revalidatePath("/leaderboard");
   revalidatePath("/settings");
   revalidatePath(`/profile/${identity.userId}`);
@@ -160,8 +167,8 @@ export async function saveProfileUsername(
   return {
     status: "success",
     message:
-      scoresSynced && likesSynced
-        ? "Username updated. Saved leaderboard and reaction activity now use the new name."
+      scoresSynced && likesSynced && commentsSynced
+        ? "Username updated. Saved leaderboard, reaction, and comment activity now use the new name."
         : "Username updated. Some saved activity may keep the old name until it refreshes.",
     username: nextUsername,
     displayName: nextDisplayName,
