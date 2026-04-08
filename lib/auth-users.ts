@@ -93,10 +93,7 @@ function createAuthUserIdQuery(userIds: string[]) {
   }
 
   return {
-    $or: [
-      { id: { $in: normalizedUserIds } },
-      { _id: { $in: objectIds } },
-    ],
+    $or: [{ id: { $in: normalizedUserIds } }, { _id: { $in: objectIds } }],
   };
 }
 

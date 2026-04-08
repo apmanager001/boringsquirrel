@@ -315,7 +315,7 @@ export async function getAdminProfileReports(
           ["createdAt", -1],
         ] as [string, 1 | -1][])
       : filter === "open"
-        ? ([ ["createdAt", -1] ] as [string, 1 | -1][])
+        ? ([["createdAt", -1]] as [string, 1 | -1][])
         : ([
             ["isRead", 1],
             ["createdAt", -1],

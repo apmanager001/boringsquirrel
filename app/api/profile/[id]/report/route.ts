@@ -5,7 +5,10 @@ import {
 } from "@/lib/auth";
 import { getStoredAuthUserById } from "@/lib/auth-users";
 import { hasBetterAuthConfig } from "@/lib/env";
-import { getProfileReportState, reportUserProfile } from "@/lib/profile-reports";
+import {
+  getProfileReportState,
+  reportUserProfile,
+} from "@/lib/profile-reports";
 
 type RouteContext = {
   params: Promise<{ id: string }>;

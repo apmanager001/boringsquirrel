@@ -57,7 +57,9 @@ export function ProfileReportFlag({ userId }: { userId: string }) {
             ...current,
             available: false,
           }));
-          setStatusMessage(data.message ?? "This profile is no longer available.");
+          setStatusMessage(
+            data.message ?? "This profile is no longer available.",
+          );
           setStatusTone("error");
           return;
         }

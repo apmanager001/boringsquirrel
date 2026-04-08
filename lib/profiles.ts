@@ -245,9 +245,7 @@ export async function getPublicProfileById(userId: string) {
     fallbackUsernameFromEmail(authUser?.email) ||
     normalizedUserId;
   const displayName =
-    authIdentity?.displayName ||
-    savedScoreIdentity?.displayName ||
-    username;
+    authIdentity?.displayName || savedScoreIdentity?.displayName || username;
   const socialLinks = getProfileSocialLinksFromSources(
     profileDocument,
     authUser,
