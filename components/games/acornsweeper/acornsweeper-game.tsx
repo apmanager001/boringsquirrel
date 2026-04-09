@@ -358,7 +358,7 @@ export function AcornSweeperGame() {
               </div>
               <div className="flex items-center gap-3 sm:hidden">
                 <div
-                  className="tooltip tooltip-left text-primary"
+                  className="tooltip tooltip-top tooltip-end text-primary"
                   data-tip={scoreHook}
                 >
                   <Ruler className="size-4" />
@@ -418,7 +418,7 @@ export function AcornSweeperGame() {
               />
             </div>
 
-            <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_12rem]">
+            <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_12rem] -mx-3 sm:mx-0">
               <div className="rounded-[1.75rem] sm:border border-base-300/15 bg-base-100/55 sm:p-4">
                 <div className="mx-auto w-full max-w-176 overflow-hidden  border border-base-300/20 bg-white/55">
                   <div
@@ -536,7 +536,7 @@ export function AcornSweeperGame() {
                   </button>
 
                   <div
-                    className="btn h-12 rounded-2xl border border-base-300/20 bg-base-100/75 hover:bg-base-100 tooltip tooltip-left sm:tooltip-top md:tooltip-left"
+                    className="btn h-12 rounded-2xl border border-base-300/20 bg-base-100/75 hover:bg-base-100 tooltip tooltip-top tooltip-end"
                     data-tip="Right-click any hidden square to place or remove a squirrel. On touch screens, switch to Flag mode before tapping."
                   >
                     <Info className="text-info" />

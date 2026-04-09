@@ -288,7 +288,7 @@ export default async function Home() {
           </div>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-3">
           {homeDailySections.map(({ game, href, scoreboard }) => (
             <article
               key={`${game.slug}-daily`}
@@ -366,7 +366,7 @@ export default async function Home() {
       <section className="page-shell mt-16 space-y-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-3">
-            <p className="section-kicker">Leaderboard preview</p>
+            <p className="section-kicker">Leaderboard</p>
             <h2 className="display-font text-4xl font-semibold text-base-content">
               Top 3
             </h2>
@@ -381,7 +381,7 @@ export default async function Home() {
           </Link>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-3">
+        <div className="grid gap-6 grid-cols-2 md:grid-cols-3">
           {homeLeaderboardSections.map(({ game, scoreboard }) => (
             <article
               key={game.slug}
@@ -420,20 +420,22 @@ export default async function Home() {
                             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-base-content/45">
                               #{entry.rank}
                             </p>
-                            <Link
-                              href={`/profile/${encodeURIComponent(entry.userId)}`}
-                              className=" block truncate font-semibold text-base-content transition hover:text-primary"
-                            >
-                              {entry.username}
-                            </Link>
+                           
                             {/* <p className="mt-1 text-sm leading-6 text-base-content/72">
                               {detailText || "Verified score on file."}
                             </p> */}
                           </div>
-
-                          <p className="display-font text-3xl font-semibold text-base-content">
-                            {entry.score}
-                          </p>
+                          <div className="flex flex-col md:flex-row justify-around items-center w-full">
+                            <Link
+                              href={`/profile/${encodeURIComponent(entry.userId)}`}
+                              className="text-xs md:text-md block truncate font-semibold text-base-content transition hover:text-primary"
+                            >
+                              {entry.username}
+                            </Link>
+                            <p className="display-font text-3xl font-semibold text-base-content">
+                              {entry.score}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     );

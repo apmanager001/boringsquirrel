@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from "react";
 import { RefreshCcw, Search, Menu, Ruler } from "lucide-react";
 import { useGameInfoDrawer } from "@/components/games/game-info-drawer";
 import { LazyScorePanel } from "@/components/games/lazy-score-panel";
@@ -239,14 +245,18 @@ export function WordSearchGame({
         <LazyScorePanel
           gameSlug="word-search"
           score={score ?? 0}
-          scoreKey={isDailyMode && dayKey ? createDailyScoreKey(dayKey) : undefined}
+          scoreKey={
+            isDailyMode && dayKey ? createDailyScoreKey(dayKey) : undefined
+          }
           callbackPath={
             isDailyMode && dayKey
               ? buildGamePlayHref("word-search", { mode: "daily", dayKey })
               : undefined
           }
           scopeLabel={
-            isDailyMode && dailyLabel ? `the ${dailyLabel} Word Search board` : undefined
+            isDailyMode && dailyLabel
+              ? `the ${dailyLabel} Word Search board`
+              : undefined
           }
           details={{
             elapsedSeconds,
@@ -298,7 +308,10 @@ export function WordSearchGame({
                 </h2>
               </div>
               <div className="flex items-center gap-3 sm:hidden">
-                <div className="tooltip tooltip-top tooltip-end text-primary" data-tip={scoreHook}>
+                <div
+                  className="tooltip tooltip-top tooltip-end text-primary"
+                  data-tip={scoreHook}
+                >
                   <Ruler className="size-4" />
                 </div>
                 <button
@@ -327,7 +340,7 @@ export function WordSearchGame({
             </button>
           </div>
 
-          <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
+          <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem] -mx-3 sm:mx-0">
             <div className="rounded-[1.75rem] border border-base-300/15 bg-base-100/55 p-4">
               <div
                 className="mx-auto grid max-w-2xl gap-1.5 sm:gap-2"
@@ -402,7 +415,7 @@ export function WordSearchGame({
               </div>
 
               <div className="mt-5 rounded-[1.2rem] bg-base-100/72 p-4">
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center justify-between gap-3 min-h-6">
                   <p className="text-xs uppercase tracking-[0.28em] text-base-content/42">
                     Target words
                   </p>
