@@ -311,3 +311,67 @@ a {
     padding-inline: 2rem;
   }
 }
+
+/* Toast styles for react-hot-toast */
+.site-toast {
+  width: 50%;
+  max-width: 800px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Center the top-center container and allow our toast width to control layout */
+.react-hot-toast__container--top-center,
+.react-hot-toast {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Mobile: let toasts take natural/full width with side padding */
+@media (max-width: 640px) {
+  .site-toast {
+    width: auto;
+    max-width: calc(100% - 2rem);
+    margin: 0 1rem;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 14px;
+  }
+}
+
+.tooltip-end {
+  &.tooltip,
+  &.tooltip-top {
+    @layer daisyui.l1.l2 {
+      > .tooltip-content,
+      &[data-tip]:before {
+        transform: translateY(var(--tt-pos, 0.25rem));
+        inset: auto 0 var(--tt-off) auto;
+      }
+
+      &:after {
+        transform: translateX(-50%) translateY(var(--tt-pos, 0.25rem));
+        inset: auto 0 var(--tt-tail) auto;
+      }
+    }
+  }
+}
+
+.tooltip-start {
+  &.tooltip,
+  &.tooltip-top {
+    @layer daisyui.l1.l2 {
+      > .tooltip-content,
+      &[data-tip]:before {
+        transform: translateY(var(--tt-pos, 0.25rem));
+        inset: auto auto var(--tt-off) 0;
+      }
+
+      &:after {
+        transform: translateX(50%) translateY(var(--tt-pos, 0.25rem));
+        inset: auto auto var(--tt-tail) 0;
+      }
+    }
+  }
+}

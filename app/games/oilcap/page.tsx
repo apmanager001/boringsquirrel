@@ -1,6 +1,6 @@
 import { Flame, Route, Trophy } from "lucide-react";
 import GameCards from "@/components/games/gameCards";
-import { OilcapGameShell } from "@/components/games/oilcap-game-shell";
+import { OilcapGameShell } from "@/components/games/oilcap/oilcap-game-shell";
 import { buildMetadata, getGameBySlug } from "@/lib/site";
 
 const game = getGameBySlug("oilcap");

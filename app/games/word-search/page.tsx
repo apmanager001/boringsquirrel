@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CalendarDays, Route, Search, Trophy } from "lucide-react";
 import GameCards from "@/components/games/gameCards";
-import { WordSearchGameShell } from "@/components/games/word-search-game-shell";
+import { WordSearchGameShell } from "@/components/games/wordSearch/word-search-game-shell";
 import {
   buildGamePlayHref,
   formatDailyPuzzleDate,

@@ -1,4 +1,4 @@
-import { WordSearchGame } from "@/components/games/word-search-game";
+import { WordSearchGame } from "@/components/games/wordSearch/word-search-game";
 import type { PuzzlePlayMode } from "@/lib/games/daily";
 import {
   createDailyWordSearchPuzzle,

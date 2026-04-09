@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 
 const OilcapGame = dynamic(
   () =>
-    import("@/components/games/oilcap-game").then(
+    import("@/components/games/oilcap/oilcap-game").then(
       (module) => module.OilcapGame,
     ),
   {

@@ -1,6 +1,6 @@
 import { BrainCircuit, Keyboard, Trophy } from "lucide-react";
 import GameCards from "@/components/games/gameCards";
-import { SudokuGameShell } from "@/components/games/sudoku-game-shell";
+import { SudokuGameShell } from "@/components/games/sudoku/sudoku-game-shell";
 import { buildMetadata, getGameBySlug } from "@/lib/site";
 
 const game = getGameBySlug("sudoku");

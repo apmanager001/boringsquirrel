@@ -7,7 +7,7 @@ import {
   useState,
   useTransition,
 } from "react";
-import { Delete, Keyboard, RefreshCcw } from "lucide-react";
+import { Delete, Keyboard, Menu, RefreshCcw, Ruler } from "lucide-react";
 import { LazyScorePanel } from "@/components/games/lazy-score-panel";
 import GameScores from "@/components/games/gameScores";
 import {
@@ -29,6 +29,9 @@ import {
   type WordlePuzzle,
 } from "@/lib/games/wordle";
 import { getGameBySlug } from "@/lib/site";
+import { useGameInfoDrawer } from "@/components/games/game-info-drawer";
+import toast from "react-hot-toast";
+import next from "next";
 
 const scoreHook = getGameBySlug("wordle")?.scoreHook;
 const keyboardRows = ["qwertyuiop", "asdfghjkl", "zxcvbnm"] as const;
@@ -86,6 +89,7 @@ export function WordleGame({
   const [feedback, setFeedback] = useState<string | null>(null);
   const [score, setScore] = useState<number | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { isOpen, openDrawer } = useGameInfoDrawer();
   const isDailyMode = mode === "daily" && Boolean(dayKey);
   const dailyLabel =
     isDailyMode && dayKey ? formatDailyPuzzleDate(dayKey) : null;
@@ -154,12 +158,14 @@ export function WordleGame({
     const guess = currentGuess.trim().toLowerCase();
 
     if (guess.length < puzzle.wordLength) {
-      setFeedback(`Need ${puzzle.wordLength} letters before you submit.`);
+      toast.error(`Need ${puzzle.wordLength} letters before you submit.`);
+      // setFeedback(`Need ${puzzle.wordLength} letters before you submit.`);
       return;
     }
 
     if (!isValidWordleGuess(guess)) {
-      setFeedback("That word is not in the current word bank.");
+      toast.error("This is not a valid word");
+      // setFeedback("That word is not in the current word bank.");
       return;
     }
 
@@ -180,17 +186,21 @@ export function WordleGame({
 
       setStatus("won");
       setScore(nextScore);
-      setFeedback(
-        `Solved in ${nextGuesses.length} guess${nextGuesses.length === 1 ? "" : "es"}.`,
+      toast.success(
+        `Congratulations! You solved the puzzle in ${nextGuesses.length} guess${nextGuesses.length === 1 ? "" : "es"}.`,
       );
+      // setFeedback(
+      //   `Solved in ${nextGuesses.length} guess${nextGuesses.length === 1 ? "" : "es"}.`,
+      // );
       return;
     }
 
     if (nextGuesses.length >= puzzle.maxGuesses) {
       setStatus("lost");
-      setFeedback(
-        `Out of rows. The word was ${puzzle.solution.toUpperCase()}.`,
-      );
+      toast.error(`Game over. The word was ${puzzle.solution.toUpperCase()}.`);
+      // setFeedback(
+      //   `Out of rows. The word was ${puzzle.solution.toUpperCase()}.`,
+      // );
       return;
     }
 
@@ -297,21 +307,95 @@ export function WordleGame({
           ? `Everyone plays the same ${dailyLabel} word. Use your keyboard or the on-screen keys and chase the cleanest daily solve.`
           : "Use your keyboard or the on-screen keys. Every valid guess reveals what belongs, what travels, and what is dead weight.";
 
+  const drawerContent = useMemo(
+    () => (
+      <>
+        <div className="space-y-4">
+          <GameScores
+            score={score ?? scorePreview}
+            stats={scoreStats}
+            compact
+          />
+        </div>
+        <LazyScorePanel
+          gameSlug="wordle"
+          score={score ?? 0}
+          scoreKey={
+            isDailyMode && dayKey ? createDailyScoreKey(dayKey) : undefined
+          }
+          callbackPath={
+            isDailyMode && dayKey
+              ? buildGamePlayHref("wordle", {
+                  mode: "daily",
+                  dayKey,
+                })
+              : undefined
+          }
+          scopeLabel={
+            isDailyMode && dailyLabel
+              ? `the ${dailyLabel} Wordle board`
+              : undefined
+          }
+          details={{
+            guessCount: guesses.length,
+            elapsedSeconds,
+            maxGuesses: puzzle.maxGuesses,
+          }}
+          canSubmit={status === "won"}
+        />
+      </>
+    ),
+    [score, scorePreview, scoreStats, statusTitle, statusBody],
+  );
+
+  const openInfoDrawer = useCallback(() => {
+    openDrawer({
+      title: "Wordle info",
+      content: drawerContent,
+    });
+  }, [drawerContent, openDrawer]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    openInfoDrawer();
+  }, [isOpen, openInfoDrawer]);
+
   return (
     <div className="card-surface rounded-4xl p-4 sm:p-6">
       <div className="flex flex-col gap-6 xl:flex-row">
         <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="section-kicker before:w-6">
-                {isDailyMode ? "Daily puzzle" : "Ready to Play"}
-              </p>
-              <h2 className="display-font text-3xl font-semibold">
-                Guess the word
-              </h2>
+            <div className="flex items-center justify-between gap-4 sm:block">
+              <div>
+                <p className="section-kicker before:w-6">
+                  {isDailyMode ? "Daily puzzle" : "Ready to Play"}
+                </p>
+                <h2 className="display-font text-3xl font-semibold">
+                  Guess the word
+                </h2>
+              </div>
+              <div className="flex items-center gap-3 sm:hidden">
+                <div
+                  className="tooltip tooltip-top tooltip-end text-primary"
+                  data-tip={scoreHook}
+                >
+                  <Ruler className="size-4" />
+                </div>
+                <button
+                  type="button"
+                  onClick={openInfoDrawer}
+                  className="btn btn-ghost btn-circle"
+                  aria-label="Open Wordle information"
+                >
+                  <Menu className="size-5" />
+                </button>
+              </div>
             </div>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap justify-between gap-3">
               <button
                 type="button"
                 onClick={handleSubmitGuess}
@@ -425,7 +509,7 @@ export function WordleGame({
               </div>
             </div>
 
-            <div className="rounded-[1.6rem] border border-base-300/15 bg-white/40 p-5">
+            <div className="hidden sm:block rounded-[1.6rem] border border-base-300/15 bg-white/40 p-5">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="section-kicker before:w-4">Run status</p>
@@ -460,33 +544,37 @@ export function WordleGame({
         </div>
 
         <aside className="w-full space-y-4 xl:max-w-sm">
-          <GameScores score={score ?? scorePreview} stats={scoreStats} />
-          <LazyScorePanel
-            gameSlug="wordle"
-            score={score ?? 0}
-            scoreKey={
-              isDailyMode && dayKey ? createDailyScoreKey(dayKey) : undefined
-            }
-            callbackPath={
-              isDailyMode && dayKey
-                ? buildGamePlayHref("wordle", {
-                    mode: "daily",
-                    dayKey,
-                  })
-                : undefined
-            }
-            scopeLabel={
-              isDailyMode && dailyLabel
-                ? `the ${dailyLabel} Wordle board`
-                : undefined
-            }
-            details={{
-              guessCount: guesses.length,
-              elapsedSeconds,
-              maxGuesses: puzzle.maxGuesses,
-            }}
-            canSubmit={status === "won"}
-          />
+          <div className="hidden sm:block">
+            <GameScores score={score ?? scorePreview} stats={scoreStats} />
+          </div>
+          <div className="hidden sm:block">
+            <LazyScorePanel
+              gameSlug="wordle"
+              score={score ?? 0}
+              scoreKey={
+                isDailyMode && dayKey ? createDailyScoreKey(dayKey) : undefined
+              }
+              callbackPath={
+                isDailyMode && dayKey
+                  ? buildGamePlayHref("wordle", {
+                      mode: "daily",
+                      dayKey,
+                    })
+                  : undefined
+              }
+              scopeLabel={
+                isDailyMode && dailyLabel
+                  ? `the ${dailyLabel} Wordle board`
+                  : undefined
+              }
+              details={{
+                guessCount: guesses.length,
+                elapsedSeconds,
+                maxGuesses: puzzle.maxGuesses,
+              }}
+              canSubmit={status === "won"}
+            />
+          </div>
         </aside>
       </div>
     </div>

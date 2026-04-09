@@ -32,7 +32,7 @@ import { useGameInfoDrawer } from "@/components/games/game-info-drawer";
 import { LazyScorePanel } from "@/components/games/lazy-score-panel";
 import SudokuAboveBoard from "./sudoku-aboveBoard";
 import { getGameBySlug } from "@/lib/site";
-import GameScores from "./gameScores";
+import GameScores from "../gameScores";
 
 const scoreHook = getGameBySlug("sudoku")?.scoreHook;
 
@@ -512,7 +512,7 @@ export function SudokuGame({ initialPuzzle }: SudokuGameProps) {
               </div>
               <div className="flex items-center gap-3 sm:hidden">
                 <div
-                  className="tooltip tooltip-left text-primary"
+                  className="tooltip tooltip-top tooltip-end text-primary"
                   data-tip={scoreHook}
                 >
                   <Ruler className="size-4" />
@@ -695,12 +695,31 @@ export function SudokuGame({ initialPuzzle }: SudokuGameProps) {
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((value) => {
                       const complete = (digitCounts.get(value) ?? 0) === 9;
 
+                      const orderClass =
+                        value === 1
+                          ? "order-1 sm:order-none"
+                          : value === 2
+                            ? "order-2 sm:order-none"
+                            : value === 3
+                              ? "order-3 sm:order-none"
+                              : value === 4
+                                ? "order-5 sm:order-none"
+                                : value === 5
+                                  ? "order-6 sm:order-none"
+                                  : value === 6
+                                    ? "order-7 sm:order-none"
+                                    : value === 7
+                                      ? "order-9 sm:order-none"
+                                      : value === 8
+                                        ? "order-10 sm:order-none"
+                                        : "order-11 sm:order-none";
+
                       return (
                         <button
                           key={value}
                           type="button"
                           onClick={() => applyInput(value)}
-                          className={`btn h-12 rounded-2xl text-lg ${
+                          className={`${orderClass} btn h-12 rounded-2xl text-lg ${
                             complete
                               ? "border border-success/30 bg-success/14 text-success"
                               : "border border-base-300/20 bg-base-100/75 text-base-content hover:bg-base-100"
@@ -711,7 +730,7 @@ export function SudokuGame({ initialPuzzle }: SudokuGameProps) {
                       );
                     })}
                     <div
-                      className="btn h-12 rounded-2xl border border-base-300/20 bg-base-100/75 hover:bg-base-100 tooltip tooltip-top md:tooltip-left"
+                      className="order-4 sm:order-0 btn h-12 rounded-2xl border border-base-300/20 bg-base-100/75 hover:bg-base-100 tooltip tooltip-top tooltip-end"
                       data-tip={`N toggles pencil mode. Arrow keys move the cursor.
                     Backspace or Delete clears the selected cell.`}
                     >
@@ -720,7 +739,7 @@ export function SudokuGame({ initialPuzzle }: SudokuGameProps) {
                     <button
                       type="button"
                       onClick={clearSelectedCell}
-                      className="btn h-12 rounded-2xl border border-base-300/20 bg-base-100/75 hover:bg-base-100"
+                      className="order-8 sm:order-0 btn h-12 rounded-2xl border border-base-300/20 bg-base-100/75 hover:bg-base-100"
                     >
                       <Eraser className="size-4" />
                     </button>
@@ -732,7 +751,7 @@ export function SudokuGame({ initialPuzzle }: SudokuGameProps) {
                           noteMode: !current.noteMode,
                         }))
                       }
-                      className={`btn h-12 rounded-2xl ${
+                      className={`order-12 sm:order-0 btn h-12 rounded-2xl ${
                         game.noteMode
                           ? "btn-primary"
                           : "border border-base-300/20 bg-base-100/75 hover:bg-base-100"

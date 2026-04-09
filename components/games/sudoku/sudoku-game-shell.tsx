@@ -1,4 +1,4 @@
-import { SudokuGame } from "@/components/games/sudoku-game";
+import { SudokuGame } from "@/components/games/sudoku/sudoku-game";
 import { createSudokuPuzzle } from "@/lib/games/sudoku";
 
 export function SudokuGameShell() {

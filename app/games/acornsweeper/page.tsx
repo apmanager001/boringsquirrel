@@ -1,6 +1,6 @@
 import { Nut, Squirrel, Trophy } from "lucide-react";
 import GameCards from "@/components/games/gameCards";
-import { AcornSweeperGameShell } from "@/components/games/acornsweeper-game-shell";
+import { AcornSweeperGameShell } from "@/components/games/acornsweeper/acornsweeper-game-shell";
 import { buildMetadata, getGameBySlug } from "@/lib/site";
 
 const game = getGameBySlug("acornsweeper");

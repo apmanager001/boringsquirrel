@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
-import { RefreshCcw, Search } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import { RefreshCcw, Search, Menu, Ruler } from "lucide-react";
+import { useGameInfoDrawer } from "@/components/games/game-info-drawer";
 import { LazyScorePanel } from "@/components/games/lazy-score-panel";
 import GameScores from "@/components/games/gameScores";
 import {
@@ -51,6 +52,7 @@ export function WordSearchGame({
   );
   const [score, setScore] = useState<number | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { isOpen, openDrawer } = useGameInfoDrawer();
   const isDailyMode = mode === "daily" && Boolean(dayKey);
   const dailyLabel =
     isDailyMode && dayKey ? formatDailyPuzzleDate(dayKey) : null;
@@ -230,20 +232,85 @@ export function WordSearchGame({
         ? `Everyone gets the same ${dailyLabel} grid. Trace horizontal, vertical, or diagonal lines and keep the miss count low.`
         : "Trace horizontal, vertical, or diagonal lines. Reverse direction still counts as long as the line matches a listed word.";
 
+  const drawerContent = useMemo(
+    () => (
+      <div className="space-y-4">
+        <GameScores score={score ?? scorePreview} stats={scoreStats} compact />
+        <LazyScorePanel
+          gameSlug="word-search"
+          score={score ?? 0}
+          scoreKey={isDailyMode && dayKey ? createDailyScoreKey(dayKey) : undefined}
+          callbackPath={
+            isDailyMode && dayKey
+              ? buildGamePlayHref("word-search", { mode: "daily", dayKey })
+              : undefined
+          }
+          scopeLabel={
+            isDailyMode && dailyLabel ? `the ${dailyLabel} Word Search board` : undefined
+          }
+          details={{
+            elapsedSeconds,
+            wordCount: puzzle.words.length,
+            wrongSelections,
+          }}
+          canSubmit={status === "won"}
+        />
+      </div>
+    ),
+    [
+      score,
+      scorePreview,
+      scoreStats,
+      isDailyMode,
+      dayKey,
+      dailyLabel,
+      elapsedSeconds,
+      puzzle.words.length,
+      wrongSelections,
+      status,
+    ],
+  );
+
+  const openInfoDrawer = useCallback(() => {
+    openDrawer({
+      title: "Word Search info",
+      content: drawerContent,
+    });
+  }, [drawerContent, openDrawer]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    openInfoDrawer();
+  }, [isOpen, openInfoDrawer]);
+
   return (
     <div className="card-surface rounded-4xl p-4 sm:p-6">
       <div className="flex flex-col gap-6 xl:flex-row">
         <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="section-kicker before:w-6">
-                {isDailyMode ? "Daily puzzle" : "Ready to Play"}
-              </p>
-              <h2 className="display-font text-3xl font-semibold">
-                Scan the grid
-              </h2>
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="section-kicker before:w-6">
+                  {isDailyMode ? "Daily puzzle" : "Ready to Play"}
+                </p>
+                <h2 className="display-font text-3xl font-semibold">
+                  Scan the grid
+                </h2>
+              </div>
+              <div className="flex items-center gap-3 sm:hidden">
+                <div className="tooltip tooltip-top tooltip-end text-primary" data-tip={scoreHook}>
+                  <Ruler className="size-4" />
+                </div>
+                <button
+                  type="button"
+                  onClick={openInfoDrawer}
+                  className="btn btn-ghost btn-circle"
+                  aria-label="Open Word Search information"
+                >
+                  <Menu className="size-5" />
+                </button>
+              </div>
             </div>
-
             <button
               type="button"
               onClick={resetGame}
@@ -367,7 +434,7 @@ export function WordSearchGame({
               </div>
             </div>
 
-            <div className="rounded-[1.6rem] border border-base-300/15 bg-white/40 p-5">
+            <div className="hidden sm:block rounded-[1.6rem] border border-base-300/15 bg-white/40 p-5">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="section-kicker before:w-4">Run status</p>
@@ -401,7 +468,7 @@ export function WordSearchGame({
           </div>
         </div>
 
-        <aside className="w-full space-y-4 xl:max-w-sm">
+        <aside className="hidden sm:block w-full space-y-4 xl:max-w-sm">
           <GameScores score={score ?? scorePreview} stats={scoreStats} />
           <LazyScorePanel
             gameSlug="word-search"

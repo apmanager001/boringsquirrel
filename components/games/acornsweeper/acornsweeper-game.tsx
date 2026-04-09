@@ -18,7 +18,7 @@ import {
   Menu,
 } from "lucide-react";
 import { ScorePanel } from "@/components/games/score-panel";
-import { AcornSweeperAboveBoard } from "@/components/games/acornsweeper-above-board";
+import { AcornSweeperAboveBoard } from "@/components/games/acornsweeper/acornsweeper-above-board";
 import { useGameInfoDrawer } from "@/components/games/game-info-drawer";
 import {
   armAcornSweeperBoard,
@@ -37,7 +37,7 @@ import {
   type AcornSweeperDifficulty,
 } from "@/lib/games/acornsweeper";
 import { getGameBySlug } from "@/lib/site";
-import GameScores from "./gameScores";
+import GameScores from "../gameScores";
 
 const scoreHook = getGameBySlug("acornsweeper")?.scoreHook;
 
