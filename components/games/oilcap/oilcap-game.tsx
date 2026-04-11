@@ -12,7 +12,11 @@ import {
   Trash2,
   Trophy,
 } from "lucide-react";
-import { ScorePanel } from "@/components/games/score-panel";
+import { GameOverModal } from "@/components/games/game-over-modal";
+import {
+  ScorePanel,
+  type ScorePanelProps,
+} from "@/components/games/score-panel";
 
 type Direction = "up" | "right" | "down" | "left";
 type PieceId =
@@ -34,6 +38,7 @@ type Snapshot = {
 };
 
 type RunState = Snapshot & {
+  id: number;
   targetRow: number;
   history: Snapshot[];
 };
@@ -150,6 +155,7 @@ function pickTargetRow() {
 
 function createRun(): RunState {
   return {
+    id: Date.now() + Math.floor(Math.random() * 1000),
     board: createEmptyBoard(),
     queue: createQueue(3),
     selectedQueueIndex: 0,
@@ -384,9 +390,52 @@ export function OilcapGame() {
     : run.placementsRemaining === 0
       ? `The board ran out of placements before the route reached row ${run.targetRow + 1} on the right wall.`
       : `Connect the source on row ${START_ROW + 1} to the cap on row ${run.targetRow + 1}. Reachable pipes score well; isolated or leaking pipes drag the total down.`;
+  const scoreStats = [
+    {
+      label: "Useful",
+      value: analysis.usefulCount,
+    },
+    {
+      label: "Waste",
+      value: analysis.isolatedCount,
+    },
+    {
+      label: "Leaks",
+      value: analysis.leakCount,
+    },
+    {
+      label: "Moves left",
+      value: run.placementsRemaining,
+    },
+  ];
+  const scorePanelProps = {
+    gameSlug: "oilcap",
+    score: analysis.score,
+    details: {
+      goalConnected: analysis.goalConnected,
+      usefulCount: analysis.usefulCount,
+      isolatedCount: analysis.isolatedCount,
+      leakCount: analysis.leakCount,
+      matchedConnections: analysis.matchedConnections,
+      placementsRemaining: run.placementsRemaining,
+    },
+    canSubmit: roundComplete && analysis.score > 0,
+  } satisfies ScorePanelProps;
 
   return (
     <div className="card-surface rounded-4xl p-4 sm:p-6">
+      <GameOverModal
+        isComplete={roundComplete}
+        completionKey={run.id}
+        title={statusTitle}
+        description={statusBody}
+        gameLabel="Oilcap"
+        score={analysis.score}
+        stats={scoreStats}
+        scorePanelProps={scorePanelProps}
+        restartLabel="New delivery"
+        onRestart={resetRun}
+      />
       <div className="flex flex-col gap-6 xl:flex-row">
         <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -649,19 +698,7 @@ export function OilcapGame() {
             </div>
           </div>
 
-          <ScorePanel
-            gameSlug="oilcap"
-            score={analysis.score}
-            details={{
-              goalConnected: analysis.goalConnected,
-              usefulCount: analysis.usefulCount,
-              isolatedCount: analysis.isolatedCount,
-              leakCount: analysis.leakCount,
-              matchedConnections: analysis.matchedConnections,
-              placementsRemaining: run.placementsRemaining,
-            }}
-            canSubmit={roundComplete && analysis.score > 0}
-          />
+          <ScorePanel {...scorePanelProps} />
         </aside>
       </div>
     </div>

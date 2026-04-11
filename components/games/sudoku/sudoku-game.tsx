@@ -28,8 +28,10 @@ import {
   type SudokuDifficulty,
   type SudokuPuzzle,
 } from "@/lib/games/sudoku";
+import { GameOverModal } from "@/components/games/game-over-modal";
 import { useGameInfoDrawer } from "@/components/games/game-info-drawer";
 import { LazyScorePanel } from "@/components/games/lazy-score-panel";
+import type { ScorePanelProps } from "@/components/games/score-panel";
 import SudokuAboveBoard from "./sudoku-aboveBoard";
 import { getGameBySlug } from "@/lib/site";
 import GameScores from "../gameScores";
@@ -431,6 +433,17 @@ export function SudokuGame({ initialPuzzle }: SudokuGameProps) {
       : game.noteMode
         ? "Number inputs toggle pencil marks instead of placing a final value."
         : "Use the keyboard or the on-screen pad. Wrong answers are rejected and count as mistakes.";
+  const scorePanelProps = {
+    gameSlug: "sudoku",
+    score: game.score ?? 0,
+    details: {
+      difficulty: game.difficulty,
+      elapsedSeconds,
+      mistakes: game.mistakes,
+      clueCount: game.clueCount,
+    },
+    canSubmit: game.status === "solved",
+  } satisfies ScorePanelProps;
   const scoreStats = useMemo(
     () => [
       {
@@ -500,6 +513,18 @@ export function SudokuGame({ initialPuzzle }: SudokuGameProps) {
 
   return (
     <div className="card-surface rounded-4xl p-4 sm:p-6">
+      <GameOverModal
+        isComplete={game.status === "solved"}
+        completionKey={game.id}
+        title={statusTitle}
+        description={statusBody}
+        gameLabel="Sudoku"
+        score={game.score ?? scorePreview}
+        stats={scoreStats}
+        scorePanelProps={scorePanelProps}
+        restartLabel="Play another board"
+        onRestart={() => resetGame()}
+      />
       <div className="flex flex-col gap-6 xl:flex-row">
         <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center justify-center sm:justify-between">
@@ -833,17 +858,7 @@ export function SudokuGame({ initialPuzzle }: SudokuGameProps) {
               </button>
             ) : null}
           </div> */}
-          <LazyScorePanel
-            gameSlug="sudoku"
-            score={game.score ?? 0}
-            details={{
-              difficulty: game.difficulty,
-              elapsedSeconds,
-              mistakes: game.mistakes,
-              clueCount: game.clueCount,
-            }}
-            canSubmit={game.status === "solved"}
-          />
+          <LazyScorePanel {...scorePanelProps} />
         </aside>
       </div>
     </div>

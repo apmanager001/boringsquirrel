@@ -8,7 +8,9 @@ import {
   useTransition,
 } from "react";
 import { Delete, Keyboard, Menu, RefreshCcw, Ruler } from "lucide-react";
+import { GameOverModal } from "@/components/games/game-over-modal";
 import { LazyScorePanel } from "@/components/games/lazy-score-panel";
+import type { ScorePanelProps } from "@/components/games/score-panel";
 import GameScores from "@/components/games/gameScores";
 import {
   buildGamePlayHref,
@@ -31,7 +33,6 @@ import {
 import { getGameBySlug } from "@/lib/site";
 import { useGameInfoDrawer } from "@/components/games/game-info-drawer";
 import toast from "react-hot-toast";
-import next from "next";
 
 const scoreHook = getGameBySlug("wordle")?.scoreHook;
 const keyboardRows = ["qwertyuiop", "asdfghjkl", "zxcvbnm"] as const;
@@ -81,6 +82,7 @@ export function WordleGame({
   mode = "classic",
   dayKey,
 }: WordleGameProps) {
+  const [runId, setRunId] = useState(0);
   const [puzzle, setPuzzle] = useState(initialPuzzle);
   const [guesses, setGuesses] = useState<WordleEvaluatedGuess[]>([]);
   const [currentGuess, setCurrentGuess] = useState("");
@@ -110,6 +112,7 @@ export function WordleGame({
 
   function resetGame() {
     startTransition(() => {
+      setRunId((current) => current + 1);
       setPuzzle(
         isDailyMode && dayKey
           ? createDailyWordlePuzzle(dayKey)
@@ -306,6 +309,40 @@ export function WordleGame({
         : isDailyMode && dailyLabel
           ? `Everyone plays the same ${dailyLabel} word. Use your keyboard or the on-screen keys and chase the cleanest daily solve.`
           : "Use your keyboard or the on-screen keys. Every valid guess reveals what belongs, what travels, and what is dead weight.";
+  const scorePanelProps = useMemo<ScorePanelProps>(
+    () => ({
+      gameSlug: "wordle",
+      score: score ?? 0,
+      scoreKey: isDailyMode && dayKey ? createDailyScoreKey(dayKey) : undefined,
+      callbackPath:
+        isDailyMode && dayKey
+          ? buildGamePlayHref("wordle", {
+              mode: "daily",
+              dayKey,
+            })
+          : undefined,
+      scopeLabel:
+        isDailyMode && dailyLabel
+          ? `the ${dailyLabel} Wordle board`
+          : undefined,
+      details: {
+        guessCount: guesses.length,
+        elapsedSeconds,
+        maxGuesses: puzzle.maxGuesses,
+      },
+      canSubmit: status === "won",
+    }),
+    [
+      dayKey,
+      dailyLabel,
+      elapsedSeconds,
+      guesses.length,
+      isDailyMode,
+      puzzle.maxGuesses,
+      score,
+      status,
+    ],
+  );
 
   const drawerContent = useMemo(
     () => (
@@ -317,35 +354,10 @@ export function WordleGame({
             compact
           />
         </div>
-        <LazyScorePanel
-          gameSlug="wordle"
-          score={score ?? 0}
-          scoreKey={
-            isDailyMode && dayKey ? createDailyScoreKey(dayKey) : undefined
-          }
-          callbackPath={
-            isDailyMode && dayKey
-              ? buildGamePlayHref("wordle", {
-                  mode: "daily",
-                  dayKey,
-                })
-              : undefined
-          }
-          scopeLabel={
-            isDailyMode && dailyLabel
-              ? `the ${dailyLabel} Wordle board`
-              : undefined
-          }
-          details={{
-            guessCount: guesses.length,
-            elapsedSeconds,
-            maxGuesses: puzzle.maxGuesses,
-          }}
-          canSubmit={status === "won"}
-        />
+        <LazyScorePanel {...scorePanelProps} />
       </>
     ),
-    [score, scorePreview, scoreStats, statusTitle, statusBody],
+    [score, scorePanelProps, scorePreview, scoreStats],
   );
 
   const openInfoDrawer = useCallback(() => {
@@ -365,6 +377,18 @@ export function WordleGame({
 
   return (
     <div className="card-surface rounded-4xl p-4 sm:p-6">
+      <GameOverModal
+        isComplete={status === "won" || status === "lost"}
+        completionKey={runId}
+        title={statusTitle}
+        description={statusBody}
+        gameLabel="Wordle"
+        score={score ?? scorePreview}
+        stats={scoreStats}
+        scorePanelProps={scorePanelProps}
+        restartLabel={isDailyMode ? "Restart daily" : "New word"}
+        onRestart={resetGame}
+      />
       <div className="flex flex-col gap-6 xl:flex-row">
         <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -548,32 +572,7 @@ export function WordleGame({
             <GameScores score={score ?? scorePreview} stats={scoreStats} />
           </div>
           <div className="hidden sm:block">
-            <LazyScorePanel
-              gameSlug="wordle"
-              score={score ?? 0}
-              scoreKey={
-                isDailyMode && dayKey ? createDailyScoreKey(dayKey) : undefined
-              }
-              callbackPath={
-                isDailyMode && dayKey
-                  ? buildGamePlayHref("wordle", {
-                      mode: "daily",
-                      dayKey,
-                    })
-                  : undefined
-              }
-              scopeLabel={
-                isDailyMode && dailyLabel
-                  ? `the ${dailyLabel} Wordle board`
-                  : undefined
-              }
-              details={{
-                guessCount: guesses.length,
-                elapsedSeconds,
-                maxGuesses: puzzle.maxGuesses,
-              }}
-              canSubmit={status === "won"}
-            />
+            <LazyScorePanel {...scorePanelProps} />
           </div>
         </aside>
       </div>

@@ -25,6 +25,7 @@ export function GameTable({ game }: GameCardProps) {
               fill
               sizes="(max-width: 640px) 108px, 128px"
               className="object-cover transition duration-500 group-hover:scale-[1.06]"
+              loading='eager'
             />
             <div className="absolute inset-0 bg-linear-to-t from-black/52 via-black/10 to-transparent" />
             <div className="absolute inset-x-0 top-0 h-16 bg-linear-to-b from-primary/18 to-transparent mix-blend-screen" />

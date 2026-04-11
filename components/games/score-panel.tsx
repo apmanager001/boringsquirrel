@@ -36,6 +36,8 @@ export type ScorePanelProps = {
   scoreKey?: string;
   callbackPath?: string;
   scopeLabel?: string;
+  compact?: boolean;
+  showLeaderboard?: boolean;
 };
 
 export function ScorePanel({
@@ -46,6 +48,8 @@ export function ScorePanel({
   scoreKey = CLASSIC_SCORE_KEY,
   callbackPath,
   scopeLabel,
+  compact = false,
+  showLeaderboard = true,
 }: ScorePanelProps) {
   const [scoreboard, setScoreboard] = useState<ScoreboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -121,6 +125,33 @@ export function ScorePanel({
   const loginHref = `/login?callbackURL=${encodeURIComponent(
     resolvedCallbackPath,
   )}`;
+  const cardClassName = compact
+    ? "rounded-[1.35rem] border border-base-300/15 bg-white/55 p-4"
+    : "rounded-[1.6rem] border border-base-300/15 bg-white/40 p-5";
+  const headingClassName = compact
+    ? "display-font text-xl font-semibold"
+    : "display-font text-2xl font-semibold";
+  const iconClassName = compact
+    ? "size-5 text-secondary"
+    : "size-6 text-secondary";
+  const statusClassName = compact
+    ? "mt-3 text-sm leading-7 text-base-content/78"
+    : "mt-4 text-sm leading-7 text-base-content/78";
+  const infoCardClassName = compact
+    ? "mt-3 rounded-[1.05rem] bg-base-100/72 p-3"
+    : "mt-4 rounded-[1.2rem] bg-base-100/72 p-4";
+  const infoLabelClassName = compact
+    ? "text-[0.65rem] uppercase tracking-[0.26em] text-base-content/45"
+    : "text-xs uppercase tracking-[0.3em] text-base-content/45";
+  const bestScoreClassName = compact
+    ? "display-font mt-2 text-2xl font-semibold text-base-content"
+    : "display-font mt-2 text-3xl font-semibold text-base-content";
+  const feedbackClassName = compact
+    ? "mt-3 rounded-[1.05rem] border border-base-300/20 bg-white/50 px-4 py-3 text-sm leading-7 text-base-content/78"
+    : "mt-4 rounded-[1.2rem] border border-base-300/20 bg-white/50 px-4 py-3 text-sm leading-7 text-base-content/78";
+  const leaderboardListClassName = compact
+    ? "mt-4 space-y-2"
+    : "mt-5 space-y-3";
 
   function handleSaveScore() {
     if (!improvementAvailable || submitPending) {
@@ -192,26 +223,22 @@ export function ScorePanel({
             : `Finish the current run to submit a score for ${scopeName}.`;
 
   return (
-    <div className="rounded-[1.6rem] border border-base-300/15 bg-white/40 p-5">
+    <div className={cardClassName}>
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="section-kicker before:w-4">Leaderboard</p>
-          <h3 className="display-font text-2xl font-semibold">
+          <h3 className={headingClassName}>
             {isDailyScope ? "Verified daily runs" : "Verified best runs"}
           </h3>
         </div>
-        <Trophy className="size-6 text-secondary" />
+        <Trophy className={iconClassName} />
       </div>
 
-      <p className="mt-4 text-sm leading-7 text-base-content/78">
-        {statusCopy}
-      </p>
+      <p className={statusClassName}>{statusCopy}</p>
       {scoreboard?.authState === "verified" && (
-        <div className="mt-4 rounded-[1.2rem] bg-base-100/72 p-4">
-          <p className="text-xs uppercase tracking-[0.3em] text-base-content/45">
-            Your {bestLabel}
-          </p>
-          <p className="display-font mt-2 text-3xl font-semibold text-base-content">
+        <div className={infoCardClassName}>
+          <p className={infoLabelClassName}>Your {bestLabel}</p>
+          <p className={bestScoreClassName}>
             {currentBest ? currentBest.score : "-"}
           </p>
           <p className="mt-2 text-sm leading-6 text-base-content/72">
@@ -223,11 +250,7 @@ export function ScorePanel({
         </div>
       )}
 
-      {feedback ? (
-        <div className="mt-4 rounded-[1.2rem] border border-base-300/20 bg-white/50 px-4 py-3 text-sm leading-7 text-base-content/78">
-          {feedback}
-        </div>
-      ) : null}
+      {feedback ? <div className={feedbackClassName}>{feedback}</div> : null}
 
       <div className="mt-4">
         {scoreboard?.authState === "verified" ? (
@@ -276,50 +299,55 @@ export function ScorePanel({
         ) : null}
       </div>
 
-      <div className="mt-5 space-y-3">
-        {loading ? (
-          <div className="flex items-center gap-3 rounded-[1.2rem] border border-base-300/15 bg-white/45 px-4 py-3 text-sm text-base-content/70">
-            <LoaderCircle className="size-4 animate-spin" />
-            Loading scores...
-          </div>
-        ) : scoreboard?.leaderboard.length ? (
-          scoreboard.leaderboard.map((entry) => {
-            const detailText = formatGameScoreDetails(gameSlug, entry.details);
+      {showLeaderboard ? (
+        <div className={leaderboardListClassName}>
+          {loading ? (
+            <div className="flex items-center gap-3 rounded-[1.2rem] border border-base-300/15 bg-white/45 px-4 py-3 text-sm text-base-content/70">
+              <LoaderCircle className="size-4 animate-spin" />
+              Loading scores...
+            </div>
+          ) : scoreboard?.leaderboard.length ? (
+            scoreboard.leaderboard.map((entry) => {
+              const detailText = formatGameScoreDetails(
+                gameSlug,
+                entry.details,
+              );
 
-            return (
-              <div
-                key={`${entry.rank}-${entry.username}`}
-                className={`flex items-center justify-between gap-4 rounded-[1.3rem] border px-4 py-3 ${
-                  entry.isViewer
-                    ? "border-primary/30 bg-primary/10"
-                    : "border-base-300/15 bg-base-100/75"
-                }`}
-              >
-                <div className="min-w-0">
-                  <p className="font-semibold text-base-content">
-                    #{entry.rank}{" "}
-                    <Link href={`/profile/${entry.userId}`}>
-                      {entry.username}
-                    </Link>
-                  </p>
-                  {detailText ? (
-                    <p className="mt-1 text-sm leading-6 text-base-content/72">
-                      {detailText}
+              return (
+                <div
+                  key={`${entry.rank}-${entry.username}`}
+                  className={`flex items-center justify-between gap-4 rounded-[1.3rem] border px-4 py-3 ${
+                    entry.isViewer
+                      ? "border-primary/30 bg-primary/10"
+                      : "border-base-300/15 bg-base-100/75"
+                  }`}
+                >
+                  <div className="min-w-0">
+                    <p className="font-semibold text-base-content">
+                      #{entry.rank}{" "}
+                      <Link href={`/profile/${entry.userId}`}>
+                        {entry.username}
+                      </Link>
                     </p>
-                  ) : null}
+                    {detailText ? (
+                      <p className="mt-1 text-sm leading-6 text-base-content/72">
+                        {detailText}
+                      </p>
+                    ) : null}
+                  </div>
+                  <span className="display-font text-2xl font-semibold text-base-content">
+                    {entry.score}
+                  </span>
                 </div>
-                <span className="display-font text-2xl font-semibold text-base-content">
-                  {entry.score}
-                </span>
-              </div>
-            );
-          })
-        ) : (
-          <div className="rounded-[1.2rem] border border-dashed border-base-300/20 bg-white/30 px-4 py-4 text-sm leading-7 text-base-content/72">
-            No verified scores have been saved for {scopeName} yet.
-          </div>
-        )}
-      </div>
+              );
+            })
+          ) : (
+            <div className="rounded-[1.2rem] border border-dashed border-base-300/20 bg-white/30 px-4 py-4 text-sm leading-7 text-base-content/72">
+              No verified scores have been saved for {scopeName} yet.
+            </div>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

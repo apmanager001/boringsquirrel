@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { RefreshCcw, Shuffle } from "lucide-react";
+import { GameOverModal } from "@/components/games/game-over-modal";
 import { LazyScorePanel } from "@/components/games/lazy-score-panel";
+import type { ScorePanelProps } from "@/components/games/score-panel";
 import GameScores from "@/components/games/gameScores";
 import {
   buildGamePlayHref,
@@ -63,6 +65,7 @@ export function WaffleGame({
   mode = "classic",
   dayKey,
 }: WaffleGameProps) {
+  const [runId, setRunId] = useState(0);
   const [puzzle, setPuzzle] = useState(initialPuzzle);
   const [grid, setGrid] = useState(() =>
     cloneWaffleGrid(initialPuzzle.startGrid),
@@ -96,6 +99,7 @@ export function WaffleGame({
 
   function resetGame() {
     startTransition(() => {
+      setRunId((current) => current + 1);
       const nextPuzzle =
         isDailyMode && dayKey
           ? createDailyWafflePuzzle(dayKey)
@@ -236,9 +240,41 @@ export function WaffleGame({
         : isDailyMode && dailyLabel
           ? `Everyone gets the same ${dailyLabel} crossings. Correct letters turn green immediately, while amber tiles still belong elsewhere on the board.`
           : "Correct letters turn green immediately, while amber tiles belong to at least one crossing word but still need better placement.";
+  const scorePanelProps = {
+    gameSlug: "waffle",
+    score: score ?? 0,
+    scoreKey: isDailyMode && dayKey ? createDailyScoreKey(dayKey) : undefined,
+    callbackPath:
+      isDailyMode && dayKey
+        ? buildGamePlayHref("waffle", {
+            mode: "daily",
+            dayKey,
+          })
+        : undefined,
+    scopeLabel:
+      isDailyMode && dailyLabel ? `the ${dailyLabel} Waffle board` : undefined,
+    details: {
+      swapsRemaining: Math.max(0, WAFFLE_MAX_SWAPS - swapsUsed),
+      elapsedSeconds,
+      completedWords,
+    },
+    canSubmit: status === "won",
+  } satisfies ScorePanelProps;
 
   return (
     <div className="card-surface rounded-4xl p-4 sm:p-6">
+      <GameOverModal
+        isComplete={status === "won" || status === "lost"}
+        completionKey={runId}
+        title={statusTitle}
+        description={statusBody}
+        gameLabel="Waffle"
+        score={score ?? scorePreview}
+        stats={scoreStats}
+        scorePanelProps={scorePanelProps}
+        restartLabel={isDailyMode ? "Restart daily" : "New board"}
+        onRestart={resetGame}
+      />
       <div className="flex flex-col gap-6 xl:flex-row">
         <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -369,32 +405,7 @@ export function WaffleGame({
 
         <aside className="w-full space-y-4 xl:max-w-sm">
           <GameScores score={score ?? scorePreview} stats={scoreStats} />
-          <LazyScorePanel
-            gameSlug="waffle"
-            score={score ?? 0}
-            scoreKey={
-              isDailyMode && dayKey ? createDailyScoreKey(dayKey) : undefined
-            }
-            callbackPath={
-              isDailyMode && dayKey
-                ? buildGamePlayHref("waffle", {
-                    mode: "daily",
-                    dayKey,
-                  })
-                : undefined
-            }
-            scopeLabel={
-              isDailyMode && dailyLabel
-                ? `the ${dailyLabel} Waffle board`
-                : undefined
-            }
-            details={{
-              swapsRemaining: Math.max(0, WAFFLE_MAX_SWAPS - swapsUsed),
-              elapsedSeconds,
-              completedWords,
-            }}
-            canSubmit={status === "won"}
-          />
+          <LazyScorePanel {...scorePanelProps} />
         </aside>
       </div>
     </div>

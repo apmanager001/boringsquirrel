@@ -501,7 +501,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         />
       </section>
 
-      <section className="mt-6 flex flex-wrap gap-3">
+      <section className="mt-6 flex flex-wrap justify-center sm:gap-3" id="admin-tabs">
         {[
           { label: "Blog inventory", value: "blog" as const, icon: FileText },
           { label: "Message review", value: "messages" as const, icon: Inbox },
@@ -523,8 +523,9 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                 messageFilter,
                 reportFilter,
                 profileReportFilter,
-              )}
-              className={`btn rounded-full px-5 ${
+              ) + `#admin-tabs`
+            }
+              className={`btn btn-xs sm:btn-md sm:rounded-full px-5 w-20 h-12 sm:w-auto sm:h-auto ${
                 isActive ? "btn-primary" : "btn-ghost"
               }`}
             >
@@ -535,7 +536,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         })}
       </section>
 
-      <section className="mt-6 grid gap-6 xl:grid-cols-[18rem_minmax(0,1fr)]">
+      <section className="sm:mt-6 grid gap-6 xl:grid-cols-[18rem_minmax(0,1fr)]">
         <aside className="space-y-6 xl:sticky xl:top-28 xl:self-start">
           <div className="hidden lg:block card-surface rounded-4xl p-6">
             <div className="flex items-center gap-3">

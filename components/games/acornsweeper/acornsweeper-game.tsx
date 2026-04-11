@@ -17,7 +17,11 @@ import {
   Ruler,
   Menu,
 } from "lucide-react";
-import { ScorePanel } from "@/components/games/score-panel";
+import { GameOverModal } from "@/components/games/game-over-modal";
+import {
+  ScorePanel,
+  type ScorePanelProps,
+} from "@/components/games/score-panel";
 import { AcornSweeperAboveBoard } from "@/components/games/acornsweeper/acornsweeper-above-board";
 import { useGameInfoDrawer } from "@/components/games/game-info-drawer";
 import {
@@ -261,6 +265,8 @@ export function AcornSweeperGame() {
     revealCell(row, col);
   }
 
+  const isGameOver = game.status === "won" || game.status === "lost";
+
   const statusTitle =
     game.status === "won"
       ? "Field cleared"
@@ -279,6 +285,18 @@ export function AcornSweeperGame() {
         : game.flagMode
           ? "Primary taps place squirrel flags while flag mode is on. Right-click still works any time."
           : "Reveal open space, read the numbers, and use squirrel flags to mark suspected acorns before you dig any deeper.";
+  const scorePanelProps = {
+    gameSlug: "acornsweeper",
+    score: game.score ?? 0,
+    details: {
+      difficulty: game.difficulty,
+      elapsedSeconds,
+      flagCount,
+      acornCount: difficultyDetails.acornCount,
+      clearedCount: safeRevealedCount,
+    },
+    canSubmit: game.status === "won",
+  } satisfies ScorePanelProps;
   const scoreStats = useMemo(
     () => [
       {
@@ -346,6 +364,18 @@ export function AcornSweeperGame() {
 
   return (
     <div className="card-surface rounded-4xl p-4 sm:p-6">
+      <GameOverModal
+        isComplete={isGameOver}
+        completionKey={game.id}
+        title={statusTitle}
+        description={statusBody}
+        gameLabel="Acorn Sweeper"
+        score={game.score ?? scorePreview}
+        stats={scoreStats}
+        scorePanelProps={scorePanelProps}
+        restartLabel="New field"
+        onRestart={() => resetGame()}
+      />
       <div className="flex flex-col gap-6 xl:flex-row">
         <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -567,18 +597,7 @@ export function AcornSweeperGame() {
             <GameScores score={game.score ?? scorePreview} stats={scoreStats} />
           </div>
 
-          <ScorePanel
-            gameSlug="acornsweeper"
-            score={game.score ?? 0}
-            details={{
-              difficulty: game.difficulty,
-              elapsedSeconds,
-              flagCount,
-              acornCount: difficultyDetails.acornCount,
-              clearedCount: safeRevealedCount,
-            }}
-            canSubmit={game.status === "won"}
-          />
+          <ScorePanel {...scorePanelProps} />
         </aside>
       </div>
     </div>

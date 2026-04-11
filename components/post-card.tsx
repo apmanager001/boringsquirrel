@@ -21,8 +21,9 @@ export function PostCard({ post }: PostCardProps) {
             fill
             sizes="(max-width: 768px) 100vw, 33vw"
             className="object-cover transition duration-500 group-hover:scale-[1.04]"
+            loading="eager"
           />
-          <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-3 bg-gradient-to-t from-black/55 to-transparent px-5 py-4 text-white">
+          <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-3 bg-linear-to-t from-black/55 to-transparent px-5 py-4 text-white">
             <span className="rounded-full bg-white/18 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em]">
               {post.category}
             </span>

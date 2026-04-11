@@ -18,7 +18,7 @@ import {
   getCurrentDailyPuzzleDayKey,
 } from "@/lib/games/daily";
 import { getPopularPosts, getRecentPosts } from "@/lib/blog";
-import { formatGameScoreDetails } from "@/lib/games/score-formatting";
+// import { formatGameScoreDetails } from "@/lib/games/score-formatting";
 import {
   getGameLeaderboard,
   type SupportedScoreGameSlug,

@@ -8,8 +8,10 @@ import {
   useTransition,
 } from "react";
 import { RefreshCcw, Search, Menu, Ruler } from "lucide-react";
+import { GameOverModal } from "@/components/games/game-over-modal";
 import { useGameInfoDrawer } from "@/components/games/game-info-drawer";
 import { LazyScorePanel } from "@/components/games/lazy-score-panel";
+import type { ScorePanelProps } from "@/components/games/score-panel";
 import GameScores from "@/components/games/gameScores";
 import {
   buildGamePlayHref,
@@ -46,6 +48,7 @@ export function WordSearchGame({
   mode = "classic",
   dayKey,
 }: WordSearchGameProps) {
+  const [runId, setRunId] = useState(0);
   const [puzzle, setPuzzle] = useState(initialPuzzle);
   const [foundWords, setFoundWords] = useState<string[]>([]);
   const [anchorCell, setAnchorCell] = useState<WordSearchPosition | null>(null);
@@ -79,6 +82,7 @@ export function WordSearchGame({
 
   function resetGame() {
     startTransition(() => {
+      setRunId((current) => current + 1);
       const nextPuzzle =
         isDailyMode && dayKey
           ? createDailyWordSearchPuzzle(dayKey)
@@ -237,48 +241,46 @@ export function WordSearchGame({
       : isDailyMode && dailyLabel
         ? `Everyone gets the same ${dailyLabel} grid. Trace horizontal, vertical, or diagonal lines and keep the miss count low.`
         : "Trace horizontal, vertical, or diagonal lines. Reverse direction still counts as long as the line matches a listed word.";
+  const scorePanelProps = useMemo<ScorePanelProps>(
+    () => ({
+      gameSlug: "word-search",
+      score: score ?? 0,
+      scoreKey: isDailyMode && dayKey ? createDailyScoreKey(dayKey) : undefined,
+      callbackPath:
+        isDailyMode && dayKey
+          ? buildGamePlayHref("word-search", { mode: "daily", dayKey })
+          : undefined,
+      scopeLabel:
+        isDailyMode && dailyLabel
+          ? `the ${dailyLabel} Word Search board`
+          : undefined,
+      details: {
+        elapsedSeconds,
+        wordCount: puzzle.words.length,
+        wrongSelections,
+      },
+      canSubmit: status === "won",
+    }),
+    [
+      dayKey,
+      dailyLabel,
+      elapsedSeconds,
+      isDailyMode,
+      puzzle.words.length,
+      score,
+      status,
+      wrongSelections,
+    ],
+  );
 
   const drawerContent = useMemo(
     () => (
       <div className="space-y-4">
         <GameScores score={score ?? scorePreview} stats={scoreStats} compact />
-        <LazyScorePanel
-          gameSlug="word-search"
-          score={score ?? 0}
-          scoreKey={
-            isDailyMode && dayKey ? createDailyScoreKey(dayKey) : undefined
-          }
-          callbackPath={
-            isDailyMode && dayKey
-              ? buildGamePlayHref("word-search", { mode: "daily", dayKey })
-              : undefined
-          }
-          scopeLabel={
-            isDailyMode && dailyLabel
-              ? `the ${dailyLabel} Word Search board`
-              : undefined
-          }
-          details={{
-            elapsedSeconds,
-            wordCount: puzzle.words.length,
-            wrongSelections,
-          }}
-          canSubmit={status === "won"}
-        />
+        <LazyScorePanel {...scorePanelProps} />
       </div>
     ),
-    [
-      score,
-      scorePreview,
-      scoreStats,
-      isDailyMode,
-      dayKey,
-      dailyLabel,
-      elapsedSeconds,
-      puzzle.words.length,
-      wrongSelections,
-      status,
-    ],
+    [score, scorePanelProps, scorePreview, scoreStats],
   );
 
   const openInfoDrawer = useCallback(() => {
@@ -295,6 +297,18 @@ export function WordSearchGame({
 
   return (
     <div className="card-surface rounded-4xl p-4 sm:p-6">
+      <GameOverModal
+        isComplete={status === "won"}
+        completionKey={runId}
+        title={statusTitle}
+        description={statusBody}
+        gameLabel="Word Search"
+        score={score ?? scorePreview}
+        stats={scoreStats}
+        scorePanelProps={scorePanelProps}
+        restartLabel={isDailyMode ? "Restart daily" : "New grid"}
+        onRestart={resetGame}
+      />
       <div className="flex flex-col gap-6 xl:flex-row">
         <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -483,32 +497,7 @@ export function WordSearchGame({
 
         <aside className="hidden sm:block w-full space-y-4 xl:max-w-sm">
           <GameScores score={score ?? scorePreview} stats={scoreStats} />
-          <LazyScorePanel
-            gameSlug="word-search"
-            score={score ?? 0}
-            scoreKey={
-              isDailyMode && dayKey ? createDailyScoreKey(dayKey) : undefined
-            }
-            callbackPath={
-              isDailyMode && dayKey
-                ? buildGamePlayHref("word-search", {
-                    mode: "daily",
-                    dayKey,
-                  })
-                : undefined
-            }
-            scopeLabel={
-              isDailyMode && dailyLabel
-                ? `the ${dailyLabel} Word Search board`
-                : undefined
-            }
-            details={{
-              elapsedSeconds,
-              wordCount: puzzle.words.length,
-              wrongSelections,
-            }}
-            canSubmit={status === "won"}
-          />
+          <LazyScorePanel {...scorePanelProps} />
         </aside>
       </div>
     </div>
